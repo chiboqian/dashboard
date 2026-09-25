@@ -1,0 +1,11 @@
+{
+    email admin@{$DOMAIN}
+}
+
+{$DOMAIN} {
+    tls {
+        dns cloudflare {$CLOUDFLARE_API_TOKEN}
+    }
+    
+    reverse_proxy localhost:8000
+}

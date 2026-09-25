@@ -1,0 +1,35 @@
+version: "3.9"
+
+services:
+  caddy:
+    build: 
+      context: .
+      dockerfile: Dockerfile.caddy
+    container_name: dashboard_caddy
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - DOMAIN=${DOMAIN:-tv.luna-strategy.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dashboard_python
+    restart: unless-stopped
+    network_mode: "host"
+    environment:
+      - PUBLIC_URL=https://${DOMAIN:-tv.luna-strategy.com}
+    volumes:
+      - .:/app
+    depends_on:
+      - caddy
+
+volumes:
+  caddy_data:
+  caddy_config:

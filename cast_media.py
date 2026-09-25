@@ -298,7 +298,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
     
     return httpd
 
-def cast_local_file(filepath=None, device_name=None, port=8000, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True):
+def cast_local_file(filepath=None, device_name=None, port=8000, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True, public_url=None):
     try:
         import pychromecast
     except ImportError:
@@ -365,9 +365,18 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     
     # URL escape the filename for the cast device
     from urllib.parse import quote
-    media_url = f"http://{local_ip}:{port}/{quote(target_filename)}"
     
-    print(f"\nServing local directory at: http://{local_ip}:{port}/")
+    if public_url:
+        public_url = public_url.rstrip('/')
+        media_url = f"{public_url}/{quote(target_filename)}"
+        print(f"\nServing securely via Caddy Reverse Proxy: {public_url}")
+        print("DashCast will natively bypass the sleep timeout without restarts!")
+        force_mode = False
+    else:
+        media_url = f"http://{local_ip}:{port}/{quote(target_filename)}"
+        print(f"\nServing local directory at: http://{local_ip}:{port}/")
+        force_mode = True
+        
     print(f"Preparing to cast '{target_filename}' (Type: {content_type})...")
     
     # Wait for the cast device to be fully ready
@@ -379,7 +388,7 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
         from pychromecast.controllers.dashcast import DashCastController
         d = DashCastController()
         cast.register_handler(d)
-        d.load_url(media_url, force=True)
+        d.load_url(media_url, force=force_mode)
         mc = None
     else:
         # Use default media receiver for audio/video/images
@@ -408,7 +417,7 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
     
-    if not mc:
+    if not mc and force_mode:
         # DashCast Keep-Alive Loop: Lenovo Smart Displays ruthlessly kill the browser after 10 minutes if using force=True
         def keep_alive_loop():
             time.sleep(570) # 9.5 minutes
@@ -458,6 +467,7 @@ if __name__ == "__main__":
     # Quiet mode is True by default. Allow the user to explicitly enable or disable it.
     parser.add_argument("--quiet", dest="quiet", action="store_true", default=True, help="Suppress HTTP access logs (Default: True)")
     parser.add_argument("--verbose", dest="quiet", action="store_false", help="Show HTTP access logs")
+    parser.add_argument("--public-url", default=None, help="Public HTTPS URL (e.g. https://tv.luna-strategy.com) when running behind a reverse proxy like Caddy")
     
     args = parser.parse_args()
-    cast_local_file(args.file, args.device, args.port, args.content_type, args.font_size, args.top, args.bottom, args.left, args.right, args.bottom_left, args.bottom_right, args.scale1, args.scale2, args.ratio, args.quiet)
+    cast_local_file(args.file, args.device, args.port, args.content_type, args.font_size, args.top, args.bottom, args.left, args.right, args.bottom_left, args.bottom_right, args.scale1, args.scale2, args.ratio, args.quiet, args.public_url)
