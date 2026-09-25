@@ -16,7 +16,9 @@ pkill -f "unified_usage.py" 2>/dev/null
 sleep 1
 
 # 1. Start the cast_media server in the background
-echo "Starting 3-pane dashboard cast..."
+echo "----------------------------------------"
+echo "Starting 3-pane dashboard cast at $(date)"
+echo "----------------------------------------"
 ./cast_media.py -d "Lenovo Smart Display" \
     --left "https://dashboard.luna-strategy.com/account_status.html" \
     --right "usage_report.html" \
