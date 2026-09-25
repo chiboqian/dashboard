@@ -94,13 +94,14 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                     
                     .divider {{ background: #333; {divider_css} z-index: 10; }}
                 </style>
+                <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
                 <script>
                     // Silently force-refresh webpages every 30 seconds, but deliberately ignore video streams so they don't stutter
                     setInterval(() => {{
                         document.querySelectorAll('iframe').forEach(f => {{
                             try {{
                                 let urlStr = f.src.toLowerCase();
-                                if (urlStr.includes('bloomberg_tv') || urlStr.includes('youtube') || urlStr.includes('.mp4')) {{
+                                if (urlStr.includes('youtube') || urlStr.includes('.mp4')) {{
                                     return;
                                 }}
                                 let url = new URL(f.src);
@@ -111,21 +112,50 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                             }}
                         }});
                     }}, 30000);
+                    
+                    // Native HLS Player Initialization
+                    function initBloomberg() {{
+                        var video = document.getElementById('bloomberg-video');
+                        if (!video) return;
+                        var videoSrc = 'https://www.bloomberg.com/media-manifest/streams/us.m3u8';
+                        function startPlay() {{
+                            video.play().catch(function(error) {{
+                                console.log("Autoplay blocked, forcing unmute...");
+                                video.muted = false;
+                                video.play();
+                            }});
+                        }}
+                        if (Hls.isSupported()) {{
+                            var hls = new Hls();
+                            hls.loadSource(videoSrc);
+                            hls.attachMedia(video);
+                            hls.on(Hls.Events.MANIFEST_PARSED, function() {{ startPlay(); }});
+                        }} else if (video.canPlayType('application/vnd.apple.mpegurl')) {{
+                            video.src = videoSrc;
+                            video.addEventListener('loadedmetadata', function() {{ startPlay(); }});
+                        }}
+                    }}
+                    window.addEventListener('DOMContentLoaded', initBloomberg);
                 </script>
                 </head><body>
-                <!-- Silent invisible video stream trick to force the Chromecast OS to stay awake forever without beeps or flashes -->
+                <!-- Silent invisible video stream trick as an absolute fallback in case no visible video panes are active -->
                 <video autoplay loop muted playsinline style="position:absolute; width:1px; height:1px; opacity:0; z-index:-1;">
                     <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
                 </video>
                 """
                 
+                def render_pane(src, scale_class):
+                    if src == '/bloomberg_tv':
+                        return f'<video id="bloomberg-video" autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>'
+                    return f'<iframe class="{scale_class}" src="{src}"></iframe>'
+                
                 # Build Left Side
                 if first_src or first_bot_src:
                     html_content += f'<div class="half-container-1">\n'
                     if first_src:
-                        html_content += f'  <div class="pane-top-left"><iframe class="scaled-iframe-1" src="{first_src}"></iframe></div>\n'
+                        html_content += f'  <div class="pane-top-left">{render_pane(first_src, "scaled-iframe-1")}</div>\n'
                     if first_bot_src:
-                        html_content += f'  <div class="pane-bottom-left"><iframe class="scaled-iframe-1" src="{first_bot_src}"></iframe></div>\n'
+                        html_content += f'  <div class="pane-bottom-left">{render_pane(first_bot_src, "scaled-iframe-1")}</div>\n'
                     html_content += f'</div>\n'
                     
                 if (first_src or first_bot_src) and (second_src or second_bot_src):
@@ -135,9 +165,9 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 if second_src or second_bot_src:
                     html_content += f'<div class="half-container-2">\n'
                     if second_src:
-                        html_content += f'  <div class="pane-top-right"><iframe class="scaled-iframe-2" src="{second_src}"></iframe></div>\n'
+                        html_content += f'  <div class="pane-top-right">{render_pane(second_src, "scaled-iframe-2")}</div>\n'
                     if second_bot_src:
-                        html_content += f'  <div class="pane-bottom-right"><iframe class="scaled-iframe-2" src="{second_bot_src}"></iframe></div>\n'
+                        html_content += f'  <div class="pane-bottom-right">{render_pane(second_bot_src, "scaled-iframe-2")}</div>\n'
                     html_content += f'</div>\n'
                 
                 html_content += "</body></html>"
