@@ -96,43 +96,22 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 </style>
                 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
                 <script>
-                    function fetchPane(el) {{
-                        var src = el.getAttribute("data-src");
-                        if (!src) return;
-                        
-                        var url = new URL(src, window.location.href);
-                        url.searchParams.set('forceRefresh', Date.now());
-                        
-                        fetch(url.toString())
-                            .then(r => r.text())
-                            .then(html => {{
-                                if (!el.shadowRoot) {{
-                                    el.attachShadow({{mode: 'open'}});
-                                }}
-                                
-                                // Parse the fetched HTML
-                                var parser = new DOMParser();
-                                var doc = parser.parseFromString(html, 'text/html');
-                                
-                                // Aggressively remove all scripts so we don't accidentally double-refresh or execute bad JS
-                                var scripts = doc.querySelectorAll('script');
-                                scripts.forEach(s => s.remove());
-                                
-                                // Inject into the Shadow DOM for perfect CSS encapsulation (no style bleed!)
-                                el.shadowRoot.innerHTML = doc.documentElement.innerHTML;
-                            }})
-                            .catch(e => console.error("Error fetching pane:", src, e));
-                    }}
-                    
-                    // Silently force-refresh all HTML panes every 30 seconds
+                    // Silently force-refresh webpages every 30 seconds, but deliberately ignore video streams so they don't stutter
                     setInterval(() => {{
-                        document.querySelectorAll('div[data-src]').forEach(fetchPane);
+                        document.querySelectorAll('iframe').forEach(f => {{
+                            try {{
+                                let urlStr = f.src.toLowerCase();
+                                if (urlStr.includes('youtube') || urlStr.includes('.mp4')) {{
+                                    return;
+                                }}
+                                let url = new URL(f.src);
+                                url.searchParams.set('forceRefresh', Date.now());
+                                f.src = url.toString();
+                            }} catch (e) {{
+                                f.src = f.src;
+                            }}
+                        }});
                     }}, 30000);
-                    
-                    // Initial load
-                    window.addEventListener('DOMContentLoaded', () => {{
-                        document.querySelectorAll('div[data-src]').forEach(fetchPane);
-                    }});
                     
                     // Native HLS Player Initialization
                     function initBloomberg() {{
@@ -180,8 +159,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                             <video id="bloomberg-video" autoplay style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
                         </div>
                         '''
-                    # Use a standard div instead of iframe! The JS fetchPane() will securely inject the Shadow DOM
-                    return f'<div class="{scale_class}" data-src="{src}"></div>'
+                    return f'<iframe class="{scale_class}" src="{src}"></iframe>'
                 
                 # Build Left Side
                 if first_src or first_bot_src:
