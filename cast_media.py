@@ -120,8 +120,8 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         var videoSrc = 'https://www.bloomberg.com/media-manifest/streams/us.m3u8';
                         function startPlay() {{
                             video.play().catch(function(error) {{
-                                console.log("Autoplay blocked, forcing mute...");
-                                video.muted = true;
+                                console.log("Autoplay blocked, forcing unmute...");
+                                video.muted = false;
                                 video.play();
                             }});
                         }}
@@ -135,7 +135,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                             video.addEventListener('loadedmetadata', function() {{ startPlay(); }});
                         }}
                         
-                        // Allow user to tap the screen to unmute (bypasses iframe autoplay restrictions)
+                        // Allow user to tap the screen to unmute just in case
                         video.addEventListener('click', function() {{
                             video.muted = false;
                             video.play();
@@ -147,7 +147,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 </script>
                 </head><body>
                 <!-- Silent invisible video stream trick as an absolute fallback in case no visible video panes are active -->
-                <video autoplay loop muted playsinline style="position:absolute; width:1px; height:1px; opacity:0; z-index:-1;">
+                <video autoplay loop playsinline style="position:absolute; width:1px; height:1px; opacity:0; z-index:-1;">
                     <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
                 </video>
                 """
@@ -156,10 +156,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                     if src == '/bloomberg_tv':
                         return f'''
                         <div style="position:relative; width:100%; height:100%;">
-                            <video id="bloomberg-video" muted autoplay style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
-                            <div id="unmute-overlay" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.7); color:white; padding:5px 10px; border-radius:5px; font-family:sans-serif; pointer-events:none; font-size:1.5vw;">
-                                🔊 Tap Video to Unmute
-                            </div>
+                            <video id="bloomberg-video" autoplay style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
                         </div>
                         '''
                     return f'<iframe class="{scale_class}" src="{src}"></iframe>'
@@ -385,8 +382,8 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
         public_url = public_url.rstrip('/')
         media_url = f"{public_url}/{quote(target_filename)}"
         print(f"\nServing securely via Caddy Reverse Proxy: {public_url}")
-        print("DashCast will natively bypass the sleep timeout without restarts!")
-        force_mode = False
+        print("Using force=True to break out of iframe and allow unmuted audio!")
+        force_mode = True
     else:
         media_url = f"http://{local_ip}:{port}/{quote(target_filename)}"
         print(f"\nServing local directory at: http://{local_ip}:{port}/")
