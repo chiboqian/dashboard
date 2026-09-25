@@ -96,7 +96,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 </style>
                 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
                 <script>
-                    function fetchPane(el) {
+                    function fetchPane(el) {{
                         var src = el.getAttribute("data-src");
                         if (!src) return;
                         
@@ -105,10 +105,10 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         
                         fetch(url.toString())
                             .then(r => r.text())
-                            .then(html => {
-                                if (!el.shadowRoot) {
-                                    el.attachShadow({mode: 'open'});
-                                }
+                            .then(html => {{
+                                if (!el.shadowRoot) {{
+                                    el.attachShadow({{mode: 'open'}});
+                                }}
                                 
                                 // Parse the fetched HTML
                                 var parser = new DOMParser();
@@ -120,50 +120,50 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                                 
                                 // Inject into the Shadow DOM for perfect CSS encapsulation (no style bleed!)
                                 el.shadowRoot.innerHTML = doc.documentElement.innerHTML;
-                            })
+                            }})
                             .catch(e => console.error("Error fetching pane:", src, e));
-                    }
+                    }}
                     
                     // Silently force-refresh all HTML panes every 30 seconds
-                    setInterval(() => {
+                    setInterval(() => {{
                         document.querySelectorAll('div[data-src]').forEach(fetchPane);
-                    }, 30000);
+                    }}, 30000);
                     
                     // Initial load
-                    window.addEventListener('DOMContentLoaded', () => {
+                    window.addEventListener('DOMContentLoaded', () => {{
                         document.querySelectorAll('div[data-src]').forEach(fetchPane);
-                    });
+                    }});
                     
                     // Native HLS Player Initialization
-                    function initBloomberg() {
+                    function initBloomberg() {{
                         var video = document.getElementById('bloomberg-video');
                         if (!video) return;
                         var videoSrc = 'https://www.bloomberg.com/media-manifest/streams/us.m3u8';
-                        function startPlay() {
-                            video.play().catch(function(error) {
+                        function startPlay() {{
+                            video.play().catch(function(error) {{
                                 console.log("Autoplay blocked, forcing unmute...");
                                 video.muted = false;
                                 video.play();
-                            });
-                        }
-                        if (Hls.isSupported()) {
+                            }});
+                        }}
+                        if (Hls.isSupported()) {{
                             var hls = new Hls();
                             hls.loadSource(videoSrc);
                             hls.attachMedia(video);
-                            hls.on(Hls.Events.MANIFEST_PARSED, function() { startPlay(); });
-                        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                            hls.on(Hls.Events.MANIFEST_PARSED, function() {{ startPlay(); }});
+                        }} else if (video.canPlayType('application/vnd.apple.mpegurl')) {{
                             video.src = videoSrc;
-                            video.addEventListener('loadedmetadata', function() { startPlay(); });
-                        }
+                            video.addEventListener('loadedmetadata', function() {{ startPlay(); }});
+                        }}
                         
                         // Allow user to tap the screen to unmute just in case
-                        video.addEventListener('click', function() {
+                        video.addEventListener('click', function() {{
                             video.muted = false;
                             video.play();
                             var overlay = document.getElementById('unmute-overlay');
                             if(overlay) overlay.style.display = 'none';
-                        });
-                    }
+                        }});
+                    }}
                     window.addEventListener('DOMContentLoaded', initBloomberg);
                 </script>
                 </head><body>
