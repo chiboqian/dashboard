@@ -373,49 +373,13 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     # Wait for the cast device to be fully ready
     cast.wait()
     
-    cloudflared_proc = None
-    
     if content_type.startswith("text/"):
-        cf_path = os.path.join(os.getcwd(), "cloudflared")
-        
-        def get_https_url(port):
-            if not os.path.exists(cf_path):
-                print("\n[Security] Initializing secure Cloudflare tunnel to bypass Chromecast mixed-content block...")
-                import urllib.request
-                urllib.request.urlretrieve("https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64", cf_path)
-                os.chmod(cf_path, 0o755)
-            
-            print(f"[Security] Requesting secure HTTPS URL for port {port}...")
-            import subprocess
-            import re
-            
-            proc = subprocess.Popen(
-                [cf_path, "tunnel", "--url", f"http://127.0.0.1:{port}"],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
-            )
-            
-            for line in proc.stdout:
-                match = re.search(r'https://[-a-zA-Z0-9]+\.trycloudflare\.com', line)
-                if match:
-                    import threading
-                    threading.Thread(target=lambda: [l for l in proc.stdout], daemon=True).start()
-                    return match.group(0), proc
-            return None, proc
-
-        https_base, cloudflared_proc = get_https_url(port)
-        if https_base:
-            media_url = f"{https_base}/{quote(target_filename)}"
-            print(f"\n[Success] Secure tunnel established: {media_url}")
-            print("[Success] Dashboard will now natively override the 10-minute sleep timeout without any restarts!")
-            force_mode = False # HTTPS allows native iframe embedding, preventing app crashes!
-        else:
-            print("\n[Warning] Failed to establish tunnel! Falling back to raw HTTP force mode.")
-            force_mode = True
-
+        # Use DashCast for text files to render them in a browser view
+        # We must use force=True to bypass iframe embedding which blocks local HTTP traffic
         from pychromecast.controllers.dashcast import DashCastController
         d = DashCastController()
         cast.register_handler(d)
-        d.load_url(media_url, force=force_mode)
+        d.load_url(media_url, force=True)
         mc = None
     else:
         # Use default media receiver for audio/video/images
@@ -437,14 +401,39 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
         else:
             cast.quit_app()
         httpd.shutdown()
-        if cloudflared_proc:
-            cloudflared_proc.terminate()
         pychromecast.discovery.stop_discovery(browser)
         print("Exited.")
         sys.exit(0)
         
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
+    
+    if not mc:
+        # DashCast Keep-Alive Loop: Lenovo Smart Displays ruthlessly kill the browser after 10 minutes if using force=True
+        def keep_alive_loop():
+            time.sleep(570) # 9.5 minutes
+            while True:
+                print("\n[Keep-Alive] 9.5 minutes elapsed. Silently refreshing DashCast to prevent sleep timeout...")
+                try:
+                    # 1. Store current volume and mute the device to prevent the loud boot chime
+                    cast.update_status()
+                    current_vol = cast.status.volume_level if cast.status else 0.5
+                    cast.set_volume(0.0)
+                    
+                    # 2. Quit the app and force-reload it
+                    cast.quit_app()
+                    time.sleep(1.5)
+                    d.load_url(media_url, force=True)
+                    
+                    # 3. Wait for connection to establish and restore volume
+                    time.sleep(4)
+                    cast.set_volume(current_vol)
+                except Exception as e:
+                    print(f"[Keep-Alive Error] {e}")
+                
+                time.sleep(570)
+                
+        threading.Thread(target=keep_alive_loop, daemon=True).start()
     
     while True:
         time.sleep(1)
