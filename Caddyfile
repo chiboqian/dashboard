@@ -1,8 +1,10 @@
 {
     email admin@{$DOMAIN}
+    # Disable default HTTP->HTTPS redirects so it doesn't try to bind to 80
+    auto_https disable_redirects
 }
 
-{$DOMAIN} {
+https://{$DOMAIN}:8443 {
     tls {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
