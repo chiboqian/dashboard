@@ -2,6 +2,14 @@
 # Navigate to the reporting directory
 cd /home/backtest01/reporting
 
+# Parse arguments
+INCLUDE_VIDEO=false
+for arg in "$@"; do
+    if [ "$arg" == "--video" ] || [ "$arg" == "-v" ]; then
+        INCLUDE_VIDEO=true
+    fi
+done
+
 # Terminate any previously running instances of the script (excluding this exact one)
 for pid in $(pgrep -f "start_dashboard.sh"); do
     if [ "$pid" != "$$" ] && [ "$pid" != "$PPID" ]; then
@@ -42,22 +50,31 @@ else
     export PUBLIC_URL=""
 fi
 
+# Setup video argument
+VIDEO_ARG=""
+if [ "$INCLUDE_VIDEO" = true ]; then
+    VIDEO_ARG="--bottom-right /bloomberg_tv"
+    echo "Video mode ENABLED."
+else
+    echo "Video mode DISABLED. (Pass --video to enable)"
+fi
+
 # 1. Start the cast_media server in the background
 echo "----------------------------------------"
-echo "Starting 3-pane dashboard cast at $(date)"
+echo "Starting dashboard cast at $(date)"
 echo "----------------------------------------"
 if [ -n "$PUBLIC_URL" ]; then
     ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
-        --bottom-right "/bloomberg_tv" \
+        $VIDEO_ARG \
         --public-url "$PUBLIC_URL" \
         --ratio 55:45 &
 else
     ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
-        --bottom-right "/bloomberg_tv" \
+        $VIDEO_ARG \
         --ratio 55:45 &
 fi
 
@@ -71,4 +88,3 @@ done
 ) &
 
 echo "Dashboard successfully launched in the background!"
-
