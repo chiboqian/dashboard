@@ -389,9 +389,10 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     
     print(f"\n>> PLAYING on {cast.cast_info.friendly_name} <<")
     print("Press Ctrl+C (or send SIGTERM) to stop playback and exit.")
-    
+
     import signal
     import sys
+    import threading
     
     def cleanup(signum, frame):
         print("\nStopping playback...")
@@ -407,7 +408,33 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
     
-    # The script now relies entirely on the invisible background video stream to keep the display awake natively.
+    if not mc:
+        # DashCast Keep-Alive Loop: Lenovo Smart Displays ruthlessly kill the browser after 10 minutes if using force=True
+        def keep_alive_loop():
+            time.sleep(570) # 9.5 minutes
+            while True:
+                print("\n[Keep-Alive] 9.5 minutes elapsed. Silently refreshing DashCast to prevent sleep timeout...")
+                try:
+                    # 1. Store current volume and mute the device to prevent the loud boot chime
+                    cast.update_status()
+                    current_vol = cast.status.volume_level if cast.status else 0.5
+                    cast.set_volume(0.0)
+                    
+                    # 2. Quit the app and force-reload it
+                    cast.quit_app()
+                    time.sleep(1.5)
+                    d.load_url(media_url, force=True)
+                    
+                    # 3. Wait for connection to establish and restore volume
+                    time.sleep(4)
+                    cast.set_volume(current_vol)
+                except Exception as e:
+                    print(f"[Keep-Alive Error] {e}")
+                
+                time.sleep(570)
+                
+        threading.Thread(target=keep_alive_loop, daemon=True).start()
+    
     while True:
         time.sleep(1)
 
