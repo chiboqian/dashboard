@@ -50,12 +50,14 @@ if [ -n "$PUBLIC_URL" ]; then
     ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
+        --bottom-right "/bloomberg_tv" \
         --public-url "$PUBLIC_URL" \
         --ratio 55:45 &
 else
     ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
+        --bottom-right "/bloomberg_tv" \
         --ratio 55:45 &
 fi
 
