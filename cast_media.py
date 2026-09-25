@@ -134,6 +134,14 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                             video.src = videoSrc;
                             video.addEventListener('loadedmetadata', function() {{ startPlay(); }});
                         }}
+                        
+                        // Allow user to tap the screen to unmute (bypasses iframe autoplay restrictions)
+                        video.addEventListener('click', function() {{
+                            video.muted = false;
+                            video.play();
+                            var overlay = document.getElementById('unmute-overlay');
+                            if(overlay) overlay.style.display = 'none';
+                        }});
                     }}
                     window.addEventListener('DOMContentLoaded', initBloomberg);
                 </script>
@@ -146,7 +154,14 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 
                 def render_pane(src, scale_class):
                     if src == '/bloomberg_tv':
-                        return f'<video id="bloomberg-video" muted autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>'
+                        return f'''
+                        <div style="position:relative; width:100%; height:100%;">
+                            <video id="bloomberg-video" muted autoplay style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
+                            <div id="unmute-overlay" style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.7); color:white; padding:5px 10px; border-radius:5px; font-family:sans-serif; pointer-events:none; font-size:1.5vw;">
+                                🔊 Tap Video to Unmute
+                            </div>
+                        </div>
+                        '''
                     return f'<iframe class="{scale_class}" src="{src}"></iframe>'
                 
                 # Build Left Side
