@@ -118,24 +118,23 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         var video = document.getElementById('bloomberg-video');
                         if (!video) return;
                         var videoSrc = 'https://www.bloomberg.com/media-manifest/streams/us.m3u8';
+                        function startPlay() {{
+                            video.play().catch(function(error) {{
+                                console.log("Autoplay blocked, forcing mute...");
+                                video.muted = true;
+                                video.play();
+                            }});
+                        }}
                         
                         if (Hls.isSupported()) {{
                             var hls = new Hls();
                             hls.loadSource(videoSrc);
                             hls.attachMedia(video);
+                            hls.on(Hls.Events.MANIFEST_PARSED, function() {{ startPlay(); }});
                         }} else if (video.canPlayType('application/vnd.apple.mpegurl')) {{
                             video.src = videoSrc;
+                            video.addEventListener('loadedmetadata', function() {{ startPlay(); }});
                         }}
-                        
-                        // Wait for user to manually tap to play
-                        var overlay = document.getElementById('play-overlay');
-                        function manualStart() {{
-                            video.muted = false;
-                            video.play();
-                            if(overlay) overlay.style.display = 'none';
-                        }}
-                        video.addEventListener('click', manualStart);
-                        if(overlay) overlay.addEventListener('click', manualStart);
                     }}
                     window.addEventListener('DOMContentLoaded', initBloomberg);
                 </script>
@@ -150,12 +149,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                     if src == '/bloomberg_tv':
                         return f'''
                         <div style="position:relative; width:100%; height:100%;">
-                            <video id="bloomberg-video" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
-                            <div id="play-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; cursor:pointer;">
-                                <div style="color:white; font-family:sans-serif; font-size:4vw; font-weight:bold; padding:20px; border:3px solid white; border-radius:10px;">
-                                    ▶️ TAP TO PLAY
-                                </div>
-                            </div>
+                            <video id="bloomberg-video" muted autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>
                         </div>
                         '''
                     return f'<iframe class="{scale_class}" src="{src}"></iframe>'
