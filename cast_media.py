@@ -19,11 +19,15 @@ def get_local_ip():
         s.close()
     return IP
 
-def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50"):
+def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True):
     """Start a temporary HTTP server to host local files or a dynamic dashboard."""
     class Handler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, directory=directory, **kwargs)
+            
+        def log_message(self, format, *args):
+            if not quiet:
+                super().log_message(format, *args)
             
         def do_GET(self):
             from urllib.parse import urlparse, parse_qs
@@ -264,7 +268,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
     
     return httpd
 
-def cast_local_file(filepath=None, device_name=None, port=8000, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50"):
+def cast_local_file(filepath=None, device_name=None, port=8000, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True):
     try:
         import pychromecast
     except ImportError:
@@ -327,7 +331,7 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     print(f"Connected to device: {cast.cast_info.friendly_name}")
     
     local_ip = get_local_ip()
-    httpd = start_local_server(serve_dir, port, font_size, top, bottom, left, right, bottom_left, bottom_right, scale1, scale2, ratio)
+    httpd = start_local_server(serve_dir, port, font_size, top, bottom, left, right, bottom_left, bottom_right, scale1, scale2, ratio, quiet)
     
     # URL escape the filename for the cast device
     from urllib.parse import quote
@@ -394,5 +398,9 @@ if __name__ == "__main__":
     parser.add_argument("--scale2", type=float, default=1.0, help="Scale factor for the second frame (right or bottom). e.g., 1.0")
     parser.add_argument("--ratio", default="50:50", help="Ratio of the first frame to the second frame (e.g., '70:30' or '60/40'). Default is 50:50.")
     
+    # Quiet mode is True by default. Allow the user to explicitly enable or disable it.
+    parser.add_argument("--quiet", dest="quiet", action="store_true", default=True, help="Suppress HTTP access logs (Default: True)")
+    parser.add_argument("--verbose", dest="quiet", action="store_false", help="Show HTTP access logs")
+    
     args = parser.parse_args()
-    cast_local_file(args.file, args.device, args.port, args.content_type, args.font_size, args.top, args.bottom, args.left, args.right, args.bottom_left, args.bottom_right, args.scale1, args.scale2, args.ratio)
+    cast_local_file(args.file, args.device, args.port, args.content_type, args.font_size, args.top, args.bottom, args.left, args.right, args.bottom_left, args.bottom_right, args.scale1, args.scale2, args.ratio, args.quiet)

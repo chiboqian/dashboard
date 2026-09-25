@@ -21,7 +21,7 @@ echo "Starting 3-pane dashboard cast..."
     --left "https://dashboard.luna-strategy.com/account_status.html" \
     --right "usage_report.html" \
     --bottom-right "bloomberg_tv" \
-    --ratio 60:40 &
+    --ratio 55:45 &
 
 # 2. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
 echo "Starting background usage report generator..."
