@@ -120,8 +120,8 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         var videoSrc = 'https://www.bloomberg.com/media-manifest/streams/us.m3u8';
                         function startPlay() {{
                             video.play().catch(function(error) {{
-                                console.log("Autoplay blocked, forcing unmute...");
-                                video.muted = false;
+                                console.log("Autoplay blocked, forcing mute...");
+                                video.muted = true;
                                 video.play();
                             }});
                         }}
@@ -146,7 +146,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 
                 def render_pane(src, scale_class):
                     if src == '/bloomberg_tv':
-                        return f'<video id="bloomberg-video" autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>'
+                        return f'<video id="bloomberg-video" muted autoplay style="width: 100%; height: 100%; object-fit: cover;"></video>'
                     return f'<iframe class="{scale_class}" src="{src}"></iframe>'
                 
                 # Build Left Side
