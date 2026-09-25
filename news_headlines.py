@@ -36,6 +36,7 @@ def fetch_and_generate():
 <html>
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="300">
 <style>
     body {{
         background-color: #000;

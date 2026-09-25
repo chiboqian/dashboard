@@ -101,7 +101,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         document.querySelectorAll('iframe').forEach(f => {{
                             try {{
                                 let urlStr = f.src.toLowerCase();
-                                if (urlStr.includes('youtube') || urlStr.includes('.mp4')) {{
+                                if (urlStr.includes('youtube') || urlStr.includes('.mp4') || urlStr.includes('news.html')) {{
                                     return;
                                 }}
                                 let url = new URL(f.src);
