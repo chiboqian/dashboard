@@ -50,14 +50,12 @@ if [ -n "$PUBLIC_URL" ]; then
     ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
-        --bottom-right "/news.html" \
         --public-url "$PUBLIC_URL" \
         --ratio 55:45 &
 else
     ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
-        --bottom-right "/news.html" \
         --ratio 55:45 &
 fi
 
@@ -72,5 +70,3 @@ done
 
 echo "Dashboard successfully launched in the background!"
 
-echo "Starting background news fetcher..."
-python3 news_headlines.py &
