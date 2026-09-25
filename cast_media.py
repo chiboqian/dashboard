@@ -95,6 +95,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                     .divider {{ background: #333; {divider_css} z-index: 10; }}
                 </style>
                 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+                <script src="/ha-catt-fix.js"></script>
                 <script>
                     // Silently force-refresh webpages every 30 seconds, but deliberately ignore video streams so they don't stutter
                     setInterval(() => {{
