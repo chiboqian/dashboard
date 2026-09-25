@@ -118,30 +118,24 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         var video = document.getElementById('bloomberg-video');
                         if (!video) return;
                         var videoSrc = 'https://www.bloomberg.com/media-manifest/streams/us.m3u8';
-                        function startPlay() {{
-                            video.play().catch(function(error) {{
-                                console.log("Autoplay blocked, forcing unmute...");
-                                video.muted = false;
-                                video.play();
-                            }});
-                        }}
+                        
                         if (Hls.isSupported()) {{
                             var hls = new Hls();
                             hls.loadSource(videoSrc);
                             hls.attachMedia(video);
-                            hls.on(Hls.Events.MANIFEST_PARSED, function() {{ startPlay(); }});
                         }} else if (video.canPlayType('application/vnd.apple.mpegurl')) {{
                             video.src = videoSrc;
-                            video.addEventListener('loadedmetadata', function() {{ startPlay(); }});
                         }}
                         
-                        // Allow user to tap the screen to unmute just in case
-                        video.addEventListener('click', function() {{
+                        // Wait for user to manually tap to play
+                        var overlay = document.getElementById('play-overlay');
+                        function manualStart() {{
                             video.muted = false;
                             video.play();
-                            var overlay = document.getElementById('unmute-overlay');
                             if(overlay) overlay.style.display = 'none';
-                        }});
+                        }}
+                        video.addEventListener('click', manualStart);
+                        if(overlay) overlay.addEventListener('click', manualStart);
                     }}
                     window.addEventListener('DOMContentLoaded', initBloomberg);
                 </script>
@@ -156,7 +150,12 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                     if src == '/bloomberg_tv':
                         return f'''
                         <div style="position:relative; width:100%; height:100%;">
-                            <video id="bloomberg-video" autoplay style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
+                            <video id="bloomberg-video" style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;"></video>
+                            <div id="play-overlay" style="position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; cursor:pointer;">
+                                <div style="color:white; font-family:sans-serif; font-size:4vw; font-weight:bold; padding:20px; border:3px solid white; border-radius:10px;">
+                                    ▶️ TAP TO PLAY
+                                </div>
+                            </div>
                         </div>
                         '''
                     return f'<iframe class="{scale_class}" src="{src}"></iframe>'
@@ -382,8 +381,8 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
         public_url = public_url.rstrip('/')
         media_url = f"{public_url}/{quote(target_filename)}"
         print(f"\nServing securely via Caddy Reverse Proxy: {public_url}")
-        print("Using force=True to break out of iframe and allow unmuted audio!")
-        force_mode = True
+        print("DashCast will natively bypass the sleep timeout without restarts!")
+        force_mode = False
     else:
         media_url = f"http://{local_ip}:{port}/{quote(target_filename)}"
         print(f"\nServing local directory at: http://{local_ip}:{port}/")
