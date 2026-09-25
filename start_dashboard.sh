@@ -25,7 +25,11 @@ echo "Starting 3-pane dashboard cast..."
 
 # 2. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
 echo "Starting background usage report generator..."
+(
 while true; do
     ./unified_usage.py --quiet
     sleep 60
 done
+) &
+
+echo "Dashboard successfully launched in the background!"
