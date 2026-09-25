@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import time
 import os
 
-RSS_URL = "https://feeds.a.dj.com/rss/RSSMarketsMain.xml"
+RSS_URL = "https://news.google.com/rss/search?q=finance+OR+markets&hl=en-US&gl=US&ceid=US:en"
 OUTPUT_FILE = "news.html"
 
 def fetch_and_generate():
@@ -14,21 +14,21 @@ def fetch_and_generate():
             
         root = ET.fromstring(xml_data)
         
-        items = root.findall('./channel/item')[:10] # Get top 10
+        items = root.findall('./channel/item')[:12] # Get top 12
         
         headlines_html = ""
         for item in items:
             title = item.find('title').text if item.find('title') is not None else ""
-            desc = item.find('description').text if item.find('description') is not None else ""
-            if desc:
-                # Truncate description
-                if len(desc) > 120:
-                    desc = desc[:117] + "..."
+            pubDate = item.find('pubDate').text if item.find('pubDate') is not None else ""
+            
+            # Format the date nicely if possible
+            if pubDate:
+                pubDate = pubDate.replace("GMT", "").strip()
             
             headlines_html += f'''
             <div class="news-item">
                 <div class="title">{title}</div>
-                <div class="desc">{desc}</div>
+                <div class="desc">{pubDate}</div>
             </div>
             '''
             
