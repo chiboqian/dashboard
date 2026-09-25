@@ -295,7 +295,7 @@ def main():
         "<head>",
         "    <meta charset='utf-8'>",
         "    <style>",
-        "        body { background-color: #121212; color: #e0e0e0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: min(1.2vw, 2.5vh) min(2.5vw, 5vh); margin: 0; overflow: hidden; }",
+        "        body { background-color: #121212; color: #e0e0e0; font-family: Consolas, Monaco, monospace; padding: min(1.2vw, 2.5vh) min(2.5vw, 5vh); margin: 0; overflow: hidden; }",
         "        table { width: 100%; border-collapse: collapse; font-size: min(2.3vw, 3.8vh); }",
         "        th, td { padding: min(0.5vw, 0.8vh) min(1.0vw, 1.8vh); text-align: left; border-bottom: 1px solid #333333; }",
         "        th { color: #4CAF50; font-weight: 600; text-transform: uppercase; font-size: min(2.0vw, 3.2vh); letter-spacing: 0.1vw; }",
