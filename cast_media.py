@@ -140,7 +140,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                 </script>
                 </head><body>
                 <!-- Silent invisible video stream trick as an absolute fallback in case no visible video panes are active -->
-                <video autoplay loop playsinline style="position:absolute; width:1px; height:1px; opacity:0; z-index:-1;">
+                <video autoplay loop muted playsinline style="position:absolute; width:1px; height:1px; opacity:0; z-index:-1;">
                     <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
                 </video>
                 """
