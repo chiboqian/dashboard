@@ -12,20 +12,19 @@ echo ""
 echo "--- US NEWS ---"
 echo "3) CBS News Live (24/7)"
 echo "4) NBC 4 New York (Local/NY News)"
-echo "5) Fox 5 NY (Local/NY News)"
 echo ""
 echo "--- UNBIASED WORLD NEWS ---"
-echo "6) Al Jazeera English (Global News)"
-echo "7) France 24 English (International News)"
+echo "5) Al Jazeera English (Global News)"
+echo "6) France 24 English (International News)"
 echo ""
 echo "--- WEATHER & OTHER ---"
-echo "8) Sky News Weather Loop"
-echo "9) NASA TV (Live Space Station)"
-echo "10) Custom URL..."
+echo "7) Sky News Weather Loop"
+echo "8) NASA TV (Live Space Station)"
+echo "9) Custom URL..."
 echo ""
 echo "q) Quit"
 echo "============================================="
-read -p "Select an option [1-10, q]: " choice
+read -p "Select an option [1-9, q]: " choice
 
 URL=""
 case $choice in
@@ -33,12 +32,11 @@ case $choice in
     2) URL="https://hls.livecdn.io/cheddar.com/cheddar/playlist.m3u8" ;;
     3) URL="https://cbsn-us.cbsnstream.cbsnews.com/out/v1/55a8648e8f134e82a470f83d562deeca/master.m3u8" ;;
     4) URL="https://d368vp0qqzvkid.cloudfront.net/11603/88889709/hls/master.m3u8?ads.xumo_channelId=88889709a&ads.xumo_ifaType=&ads.xumo_providerId=3816&ads.xumo_providerName=NBCNNY" ;;
-    5) URL="https://cdn-uw2-prod.tsv2.amagi.tv/linear/amg00488-foxdigital-wnyw-lgus/playlist.m3u8" ;;
-    6) URL="https://live-hls-web-aje.getaj.net/AJE/index.m3u8" ;;
-    7) URL="https://static.france24.com/live/F24_EN_HI_HLS/live_web.m3u8" ;;
-    8) URL="https://distro001-gb-hls1-prd.delivery.skycdp.com/easel_cdn/ngrp:weather_loop.stream_all/playlist.m3u8" ;;
-    9) URL="https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8" ;;
-    10) 
+    5) URL="https://live-hls-web-aje.getaj.net/AJE/index.m3u8" ;;
+    6) URL="https://static.france24.com/live/F24_EN_HI_HLS/live_web.m3u8" ;;
+    7) URL="https://distro001-gb-hls1-prd.delivery.skycdp.com/easel_cdn/ngrp:weather_loop.stream_all/playlist.m3u8" ;;
+    8) URL="https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8" ;;
+    9) 
         read -p "Enter custom M3U8 or MP4 URL: " URL
         ;;
     q|Q) 
