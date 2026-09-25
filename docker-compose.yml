@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
     network_mode: "host"
     environment:
-      - CLOUDFLARE_API_TOKEN=${CLOUDFLARE_API_TOKEN}
+      - CLOUDFLARE_API_TOKEN=${CADDY_CLOUDFLARE_API_TOKEN}
       - DOMAIN=${DOMAIN:-tv.luna-strategy.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile
