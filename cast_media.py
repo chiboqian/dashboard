@@ -91,10 +91,14 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                     .divider {{ background: #333; {divider_css} z-index: 10; }}
                 </style>
                 <script>
-                    // Silently force-refresh all iframes (both local and external) every 30 seconds
+                    // Silently force-refresh webpages every 30 seconds, but deliberately ignore video streams so they don't stutter
                     setInterval(() => {{
                         document.querySelectorAll('iframe').forEach(f => {{
                             try {{
+                                let urlStr = f.src.toLowerCase();
+                                if (urlStr.includes('bloomberg_tv') || urlStr.includes('youtube') || urlStr.includes('.mp4')) {{
+                                    return;
+                                }}
                                 let url = new URL(f.src);
                                 url.searchParams.set('forceRefresh', Date.now());
                                 f.src = url.toString();
