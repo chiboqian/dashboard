@@ -391,7 +391,16 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     if content_type.startswith("text/"):
         # Use DashCast for text files to render them in a browser view
         # We must use force=True to bypass iframe embedding which blocks local HTTP traffic
-        from pychromecast.controllers.dashcast import DashCastController
+        from pychromecast.controllers.dashcast import APP_DASHCAST, DashCastController
+        # A previous run leaves DashCast "running" with our page loaded top-level (force=True),
+        # which replaces the dashcast namespace. pychromecast won't relaunch an app that is already
+        # running, so load_url would fail with UnsupportedNamespace. Quit it first.
+        if cast.app_id == APP_DASHCAST:
+            cast.quit_app()
+            for _ in range(20):
+                if cast.app_id != APP_DASHCAST:
+                    break
+                time.sleep(0.5)
         d = DashCastController()
         cast.register_handler(d)
         d.load_url(media_url, force=force_mode)
