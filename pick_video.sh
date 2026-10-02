@@ -1,5 +1,5 @@
 #!/bin/bash
-cd /home/backtest01/reporting
+cd "$(dirname "$(readlink -f "$0")")"
 
 echo "============================================="
 echo "   CHOOSE A LIVE VIDEO STREAM TO CAST"
@@ -60,4 +60,4 @@ echo "Stopping any currently running dashboard..."
 sleep 1
 
 echo "Starting stream: $URL"
-/home/backtest01/reporting/venv/bin/python3 play_video.py "$URL"
+venv/bin/python3 play_video.py "$URL"

@@ -1,10 +1,10 @@
 #!/bin/bash
 # Navigate to the reporting directory
-cd /home/backtest01/reporting
+cd "$(dirname "$(readlink -f "$0")")"
 
 # Use the project venv so the python3 shebangs in cast_media.py / unified_usage.py
 # resolve to it (cron runs with a minimal environment)
-export PATH="/home/backtest01/reporting/venv/bin:$PATH"
+export PATH="$PWD/venv/bin:$PATH"
 
 # Parse arguments
 INCLUDE_VIDEO=false
