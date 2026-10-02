@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import os
 import subprocess
+import sys
 import re
 from datetime import datetime, timezone
 
@@ -85,7 +87,7 @@ def get_cloudflare_usage():
     ops_data = []
     env_vars = {}
     try:
-        with open("/home/backtest01/reporting/.env") as f:
+        with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")) as f:
             for line in f:
                 if "=" in line and not line.startswith("#"):
                     k, v = line.strip().split("=", 1)
@@ -115,7 +117,8 @@ def get_cloudflare_usage():
     if d1_id:
         old_token = api_token
         try:
-            with open("/home/backtest01/luna-strategy-Trading/Trading/.env") as f:
+            # .env of the trading repo, whose CLOUDFLARE_API_TOKEN has D1 permissions
+            with open(env_vars["TRADING_ENV_FILE"]) as f:
                 for line in f:
                     if line.startswith("CLOUDFLARE_API_TOKEN="):
                         old_token = line.strip().split("=")[1]
@@ -154,8 +157,7 @@ print(sum(obj['Size'] for obj in res.get('Contents', [])))
     )
 
     try:
-        venv_python = "/home/backtest01/luna-strategy-Trading/Trading/.venv/bin/python"
-        r2_out = subprocess.run([venv_python, "-c", r2_script], capture_output=True, text=True).stdout.strip()
+        r2_out = subprocess.run([sys.executable, "-c", r2_script], capture_output=True, text=True).stdout.strip()
         if r2_out and r2_out.isdigit():
             size_mb = int(r2_out) / (1024 * 1024)
             used_pct = (size_mb / R2_CAPACITY_MB) * 100
