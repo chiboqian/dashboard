@@ -60,4 +60,4 @@ echo "Stopping any currently running dashboard..."
 sleep 1
 
 echo "Starting stream: $URL"
-python3 play_video.py "$URL"
+/home/backtest01/reporting/venv/bin/python3 play_video.py "$URL"

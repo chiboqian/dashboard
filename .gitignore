@@ -11,3 +11,6 @@ cast.log
 # Python
 __pycache__/
 *.pyc
+
+# Virtualenv
+venv/

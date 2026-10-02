@@ -8,4 +8,4 @@ sleep 1
 URL=${1:-"https://www.bloomberg.com/media-manifest/streams/us.m3u8"}
 
 echo "Starting full-screen video stream..."
-python3 play_video.py "$URL"
+/home/backtest01/reporting/venv/bin/python3 play_video.py "$URL"
