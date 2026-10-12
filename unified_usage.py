@@ -5,9 +5,16 @@ import sys
 import re
 from datetime import datetime, timezone
 
-def run_command(cmd):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    return result.stdout.strip()
+def run_command(cmd, timeout=45):
+    try:
+        env = os.environ.copy()
+        local_bin = os.path.expanduser("~/.local/bin")
+        if local_bin not in env.get("PATH", "").split(os.pathsep):
+            env["PATH"] = f"{local_bin}:{env.get('PATH', '')}"
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout, env=env)
+        return result.stdout.strip()
+    except Exception:
+        return ""
 
 def format_iso_date(iso_str):
     """Converts UTC ISO string to Local Time format"""
@@ -60,7 +67,7 @@ def parse_agy_usage(text):
     data = []
     for line in text.split('\n'):
         if "Limit Remaining" in line:
-            parts = re.split(r'\t+', line.strip())
+            parts = re.split(r'\t+|\s{2,}', line.strip())
             if len(parts) >= 4:
                 category = f"{parts[0]} - {parts[1]}"
                 remaining_str = parts[2].replace('%', '')
@@ -278,10 +285,17 @@ def main():
     if not args.quiet:
         print("Fetching usage data (this takes a few seconds)...\n")
 
-    claude_out = run_command('claude -p "/usage"')
-    agy_out = run_command('agy -p "/usage"')
+    from concurrent.futures import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        f_claude = executor.submit(run_command, 'claude -p "/usage"')
+        f_agy = executor.submit(run_command, 'agy -p "/usage"')
+        f_cf = executor.submit(get_cloudflare_usage)
 
-    all_data = parse_claude_usage(claude_out) + parse_agy_usage(agy_out) + get_cloudflare_usage()
+        claude_out = f_claude.result()
+        agy_out = f_agy.result()
+        cf_data = f_cf.result()
+
+    all_data = parse_claude_usage(claude_out) + parse_agy_usage(agy_out) + cf_data
 
     from datetime import datetime
     now = datetime.now().astimezone()

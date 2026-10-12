@@ -2,9 +2,9 @@
 # Navigate to the reporting directory
 cd "$(dirname "$(readlink -f "$0")")"
 
-# Use the project venv so the python3 shebangs in cast_media.py / unified_usage.py
-# resolve to it (cron runs with a minimal environment)
-export PATH="$PWD/venv/bin:$PATH"
+# Ensure user binaries (~/.local/bin for claude, agy) and project venv are in PATH
+# (cron runs with a minimal environment like /usr/bin:/bin)
+export PATH="$HOME/.local/bin:$PWD/venv/bin:$PATH"
 
 # Parse arguments
 INCLUDE_VIDEO=false
@@ -63,7 +63,11 @@ else
     echo "Video mode DISABLED. (Pass --video to enable)"
 fi
 
-# 1. Start the cast_media server in the background
+# 1. Pre-generate a fresh usage report before casting so display has up-to-date data
+echo "Pre-generating fresh usage report..."
+./unified_usage.py --quiet
+
+# 2. Start the cast_media server in the background
 echo "----------------------------------------"
 echo "Starting dashboard cast at $(date)"
 echo "----------------------------------------"
@@ -82,7 +86,7 @@ else
         --ratio 55:45 &
 fi
 
-# 2. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
+# 3. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
 echo "Starting background usage report generator..."
 (
 while true; do
