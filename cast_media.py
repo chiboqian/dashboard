@@ -418,19 +418,31 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
     import sys
     import threading
     
-    def cleanup(signum, frame):
+    def cleanup(signum=None, frame=None):
         print("\nStopping playback...")
-        if mc:
-            mc.stop()
-        else:
-            cast.quit_app()
-        httpd.shutdown()
-        pychromecast.discovery.stop_discovery(browser)
+        try:
+            if mc:
+                mc.stop()
+            elif cast:
+                cast.quit_app()
+        except Exception as e:
+            print(f"Warning: could not stop cast app: {e}")
+        try:
+            httpd.shutdown()
+            httpd.server_close()
+        except Exception as e:
+            print(f"Warning: could not shutdown HTTP server: {e}")
+        try:
+            pychromecast.discovery.stop_discovery(browser)
+        except Exception:
+            pass
         print("Exited.")
         sys.exit(0)
         
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, cleanup)
     
     # With ha-catt-fix handling the keep-alive natively in the browser, we no longer need the 9.5-minute restart flashes!
     print("DashCast started. ha-catt-fix will maintain the connection indefinitely.")

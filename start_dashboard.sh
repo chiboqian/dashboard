@@ -14,18 +14,8 @@ for arg in "$@"; do
     fi
 done
 
-# Terminate any previously running instances of the script (excluding this exact one)
-for pid in $(pgrep -f "start_dashboard.sh"); do
-    if [ "$pid" != "$$" ] && [ "$pid" != "$PPID" ]; then
-        kill -9 $pid 2>/dev/null
-    fi
-done
-
-# Kill any existing dashboard casting instances to prevent socket conflicts
-pkill -TERM -f "cast_media.py" 2>/dev/null
-pkill -f "unified_usage.py" 2>/dev/null
-pkill -f "caddy run" 2>/dev/null
-
+# Terminate any previously running instances cleanly
+./stop_dashboard.sh > /dev/null 2>&1
 sleep 1
 
 # Extract domain and Cloudflare token from .env safely
@@ -47,7 +37,8 @@ fi
 # Start native Caddy reverse proxy
 if [ -f "./caddy" ] && [ -n "$DOMAIN" ] && [ -n "$CLOUDFLARE_API_TOKEN" ]; then
     echo "Starting native Caddy reverse proxy for $DOMAIN on port 8443..."
-    ./caddy run --config Caddyfile > caddy.log 2>&1 &
+    nohup ./caddy run --config Caddyfile > caddy.log 2>&1 &
+    echo $! > .caddy.pid
     export PUBLIC_URL="https://$DOMAIN:8443"
 else
     echo "Warning: Caddy requirements not met. Falling back to local HTTP IP."
@@ -72,27 +63,29 @@ echo "----------------------------------------"
 echo "Starting dashboard cast at $(date)"
 echo "----------------------------------------"
 if [ -n "$PUBLIC_URL" ]; then
-    ./cast_media.py -d "Lenovo Smart Display" \
+    nohup ./venv/bin/python3 -u ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
         $VIDEO_ARG \
         --public-url "$PUBLIC_URL" \
-        --ratio 55:45 &
+        --ratio 55:45 > cast_media.log 2>&1 &
 else
-    ./cast_media.py -d "Lenovo Smart Display" \
+    nohup ./venv/bin/python3 -u ./cast_media.py -d "Lenovo Smart Display" \
         --left "https://dashboard.luna-strategy.com/account_status.html" \
         --right "usage_report.html" \
         $VIDEO_ARG \
-        --ratio 55:45 &
+        --ratio 55:45 > cast_media.log 2>&1 &
 fi
+echo $! > .cast_media.pid
 
 # 3. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
 echo "Starting background usage report generator..."
-(
+nohup bash -c '
 while true; do
     ./unified_usage.py --quiet
     sleep 60
 done
-) &
+' > /dev/null 2>&1 &
+echo $! > .usage_loop.pid
 
 echo "Dashboard successfully launched in the background!"

@@ -4,6 +4,8 @@ usage_report.txt
 dashboard.html
 cast.log
 *.log
+*.pid
+.*.pid
 
 # Secrets
 .env
