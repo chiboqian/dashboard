@@ -87,5 +87,6 @@ while true; do
 done
 ' > /dev/null 2>&1 &
 echo $! > .usage_loop.pid
+disown -a 2>/dev/null || true
 
 echo "Dashboard successfully launched in the background!"

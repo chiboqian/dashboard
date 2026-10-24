@@ -304,7 +304,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
     
     return httpd
 
-def cast_local_file(filepath=None, device_name=None, port=8000, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True, public_url=None):
+def cast_local_file(filepath=None, device_name=None, port=8888, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True, public_url=None):
     try:
         import pychromecast
     except ImportError:
@@ -441,7 +441,7 @@ def cast_local_file(filepath=None, device_name=None, port=8000, content_type=Non
         
     signal.signal(signal.SIGINT, cleanup)
     signal.signal(signal.SIGTERM, cleanup)
-    if hasattr(signal, "SIGHUP"):
+    if hasattr(signal, "SIGHUP") and signal.getsignal(signal.SIGHUP) != signal.SIG_IGN:
         signal.signal(signal.SIGHUP, cleanup)
     
     # With ha-catt-fix handling the keep-alive natively in the browser, we no longer need the 9.5-minute restart flashes!
@@ -454,7 +454,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Stream a local media or text file to a Smart Display or Smart TV via Google Cast.")
     parser.add_argument("file", nargs="?", help="Path to the local file (e.g., video.mp4, document.txt). Optional if using --top/--bottom.")
     parser.add_argument("-d", "--device", help="Name of the cast device (e.g., 'Lenovo Smart Display', 'Living Room TV'). If omitted, casts to the first device found.", default=None)
-    parser.add_argument("-p", "--port", type=int, default=8000, help="Local HTTP port to serve the file on (default: 8000)")
+    parser.add_argument("-p", "--port", type=int, default=8888, help="Local HTTP port to serve the file on (default: 8888)")
     parser.add_argument("-c", "--content-type", default=None, help="Force a MIME type (e.g. video/mp4). If omitted, it will automatically detect the correct type.")
     parser.add_argument("--font-size", default="1.5vw", help="Font size for text files (e.g. '12px', '2em', '3vw'). Default is 1.5vw.")
     parser.add_argument("--top", help="URL or local file to display on the top half of a dynamically generated split-screen dashboard.")

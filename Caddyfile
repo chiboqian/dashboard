@@ -9,5 +9,5 @@ https://{$DOMAIN}:8443 {
         dns cloudflare {$CLOUDFLARE_API_TOKEN}
     }
     
-    reverse_proxy localhost:8000
+    reverse_proxy localhost:8888
 }

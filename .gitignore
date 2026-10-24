@@ -2,10 +2,17 @@
 usage_report.html
 usage_report.txt
 dashboard.html
+news_dashboard.html
+news_data.json
+account_status.html
 cast.log
 *.log
 *.pid
 .*.pid
+
+# Local binaries & scripts
+cloudflared*
+test_env.sh
 
 # Secrets
 .env

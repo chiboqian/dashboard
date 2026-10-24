@@ -66,11 +66,16 @@ def parse_claude_usage(text):
 def parse_agy_usage(text):
     data = []
     for line in text.split('\n'):
-        if "Limit Remaining" in line:
+        if "Limit" in line:
             parts = re.split(r'\t+|\s{2,}', line.strip())
             if len(parts) >= 4:
-                category = f"{parts[0]} - {parts[1]}"
-                remaining_str = parts[2].replace('%', '')
+                model_group = parts[0].strip()
+                limit_type = parts[1].strip()
+                if limit_type.startswith(model_group):
+                    limit_type = limit_type[len(model_group):].strip()
+                limit_type = re.sub(r'\bLimit(?:\s+Remaining)?\b', '', limit_type).strip()
+                category = f"{model_group} - {limit_type}" if limit_type else model_group
+                remaining_str = parts[2].replace('%', '').strip()
                 try:
                     remaining = int(remaining_str)
                     used = 100 - remaining
@@ -80,13 +85,12 @@ def parse_agy_usage(text):
                 
                 resets = format_iso_date(parts[3])
                 
-                if "Gemini Models" in category:
-                    data.append({
-                        "System": "Gemini",
-                        "Category": category.replace("Limit Remaining", "").strip(),
-                        "Used (%)": f"{used}%" if isinstance(used, int) else used,
-                        "Resets": resets
-                    })
+                data.append({
+                    "System": "Gemini",
+                    "Category": category,
+                    "Used (%)": f"{used}%" if isinstance(used, int) else used,
+                    "Resets": resets
+                })
     return data
 
 def get_cloudflare_usage():

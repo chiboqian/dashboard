@@ -55,7 +55,7 @@ except Exception:
     pass
 ' 2>/dev/null || true
 
-# 3. Stop background usage generator loop and any running instances
+# 3. Stop background usage generator loop, news fetcher, and any running instances
 if [ -f .usage_loop.pid ]; then
     PID=$(cat .usage_loop.pid 2>/dev/null)
     if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
@@ -65,13 +65,38 @@ if [ -f .usage_loop.pid ]; then
     rm -f .usage_loop.pid
 fi
 
-for pid in $(pgrep -f "start_dashboard.sh"); do
-    if [ "$pid" != "$$" ] && [ "$pid" != "$PPID" ]; then
+if [ -f .news_fetcher.pid ]; then
+    PID=$(cat .news_fetcher.pid 2>/dev/null)
+    if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+        pkill -P "$PID" 2>/dev/null
+        kill -9 "$PID" 2>/dev/null
+    fi
+    rm -f .news_fetcher.pid
+fi
+
+# Collect all ancestor PIDs so callers (and any shell wrappers) are never killed
+ancestor_pids=()
+curr=$$
+while [ -n "$curr" ] && [ "$curr" -gt 1 ] 2>/dev/null; do
+    ancestor_pids+=("$curr")
+    curr=$(ps -o ppid= -p "$curr" 2>/dev/null | tr -d ' ')
+done
+
+for pid in $(pgrep -f "start_dashboard.sh|start_news.sh"); do
+    is_ancestor=false
+    for apid in "${ancestor_pids[@]}"; do
+        if [ "$pid" -eq "$apid" ]; then
+            is_ancestor=true
+            break
+        fi
+    done
+    if [ "$is_ancestor" = false ]; then
         pkill -P "$pid" 2>/dev/null
         kill -9 "$pid" 2>/dev/null
     fi
 done
 pkill -9 -f "unified_usage.py" 2>/dev/null
+pkill -9 -f "fetch_news.py" 2>/dev/null
 
 # 4. Stop native Caddy reverse proxy
 if [ -f "./caddy" ]; then
@@ -90,7 +115,8 @@ if pgrep -f "caddy run" > /dev/null 2>&1; then
     pkill -9 -f "caddy run" 2>/dev/null
 fi
 
-# 5. Clean up any remaining sockets on dashboard ports (8000 and 8443)
+# 5. Clean up any remaining sockets on dashboard ports (8888 and 8443)
+fuser -k 8888/tcp 2>/dev/null || true
 fuser -k 8000/tcp 2>/dev/null || true
 fuser -k 8443/tcp 2>/dev/null || true
 
