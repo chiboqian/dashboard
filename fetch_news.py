@@ -24,28 +24,34 @@ OUTPUT_JSON = os.path.join(SCRIPT_DIR, "news_data.json")
 FEEDS = [
     # Markets & Financial
     {
-        "url": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
-        "source": "WSJ",
-        "category": "markets",
-        "badge_color": "#d4af37"
-    },
-    {
-        "url": "https://www.cnbc.com/id/10000664/device/rss/rss.html",
+        "url": "https://www.cnbc.com/id/100003114/device/rss/rss.html",
         "source": "CNBC",
         "category": "markets",
         "badge_color": "#0284c7"
     },
     {
-        "url": "https://feeds.content.dowjones.io/public/rss/mw_marketpulse",
+        "url": "https://feeds.content.dowjones.io/public/rss/mw_topstories",
         "source": "MarketWatch",
         "category": "markets",
         "badge_color": "#10b981"
     },
     {
-        "url": "https://news.google.com/rss/search?q=stock+market+economy+finance&hl=en-US&gl=US&ceid=US:en",
-        "source": "Yahoo / Reuters",
+        "url": "https://news.google.com/rss/headlines/section/topic/BUSINESS?hl=en-US&gl=US&ceid=US:en",
+        "source": "Bloomberg / WSJ",
         "category": "markets",
         "badge_color": "#8b5cf6"
+    },
+    {
+        "url": "https://news.google.com/rss/search?q=when:24h+(stocks+OR+market+OR+finance)&hl=en-US&gl=US&ceid=US:en",
+        "source": "Markets Wire",
+        "category": "markets",
+        "badge_color": "#d4af37"
+    },
+    {
+        "url": "https://www.cnbc.com/id/15839069/device/rss/rss.html",
+        "source": "CNBC Investing",
+        "category": "markets",
+        "badge_color": "#0284c7"
     },
     # World News
     {
