@@ -315,13 +315,17 @@ def main():
         "<head>",
         "    <meta charset='utf-8'>",
         "    <style>",
-        "        body { background-color: #121212; color: #e0e0e0; font-family: Consolas, Monaco, monospace; padding: min(1.2vw, 2.5vh) min(2.5vw, 5vh); margin: 0; overflow: hidden; }",
-        "        table { width: 100%; border-collapse: collapse; font-size: min(2.3vw, 3.8vh); }",
-        "        th, td { padding: min(0.5vw, 0.8vh) min(1.0vw, 1.8vh); text-align: left; border-bottom: 1px solid #333333; }",
-        "        th { color: #4CAF50; font-weight: 600; text-transform: uppercase; font-size: min(2.0vw, 3.2vh); letter-spacing: 0.1vw; }",
-        "        .header { font-size: min(1.8vw, 3.0vh); color: #aaaaaa; margin-bottom: 0; text-align: left; font-weight: 500; }",
-        "        .title-bar { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #4CAF50; padding-bottom: min(0.7vw, 1.2vh); margin-bottom: min(0.7vw, 1.2vh); }",
-        "        h2 { margin: 0; color: #ffffff; font-size: min(3.0vw, 4.5vh); font-weight: 400; }",
+        "        * { box-sizing: border-box; }",
+        "        html, body { width: 100%; height: 100%; margin: 0; padding: min(1.0vw, 1.8vh) min(1.8vw, 3.0vh); background-color: #121212; color: #e0e0e0; font-family: Consolas, Monaco, monospace; overflow: hidden; }",
+        "        .title-bar { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid #4CAF50; padding-bottom: min(0.5vw, 0.8vh); margin-bottom: min(0.5vw, 0.8vh); }",
+        "        h2 { margin: 0; color: #ffffff; font-size: min(2.5vw, 3.8vh); font-weight: 500; letter-spacing: 0.05vw; }",
+        "        .header { font-size: min(1.6vw, 2.4vh); color: #888888; margin-bottom: 0; text-align: right; font-weight: 400; white-space: nowrap; }",
+        "        table { width: 100%; table-layout: fixed; border-collapse: collapse; font-size: min(1.9vw, 2.9vh); }",
+        "        th, td { padding: min(0.4vw, 0.6vh) min(0.5vw, 1.0vh); border-bottom: 1px solid #2a2a2a; }",
+        "        th { color: #4CAF50; font-weight: 600; text-transform: uppercase; font-size: min(1.6vw, 2.5vh); letter-spacing: 0.05vw; }",
+        "        .col-cat { width: 54%; text-align: left; overflow-wrap: break-word; word-break: break-word; }",
+        "        .col-used { width: 16%; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }",
+        "        .col-reset { width: 30%; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }",
         "    </style>",
         "</head>",
         "<body>",
@@ -330,11 +334,11 @@ def main():
         f"       <div class='header'>Data fetched at: {fetch_time}</div>",
         "    </div>",
         "    <table>",
-        "        <tr><th>System / Category</th><th>Used</th><th>Reset Time</th></tr>"
+        "        <tr><th class='col-cat'>System / Category</th><th class='col-used'>Used</th><th class='col-reset'>Reset Time</th></tr>"
     ]
     
     for row in all_data:
-        html_lines.append(f"        <tr><td>{row['System']} / {row['Category']}</td><td>{row['Used (%)']}</td><td>{row['Resets']}</td></tr>")
+        html_lines.append(f"        <tr><td class='col-cat'>{row['System']} / {row['Category']}</td><td class='col-used'>{row['Used (%)']}</td><td class='col-reset'>{row['Resets']}</td></tr>")
         
     html_lines.append("    </table>")
     html_lines.append("</body>")

@@ -5,6 +5,10 @@ dashboard.html
 news_dashboard.html
 news_data.json
 account_status.html
+election_dashboard.html
+election_data.json
+.election_mode
+election_override.json
 cast.log
 *.log
 *.pid

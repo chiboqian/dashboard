@@ -11,14 +11,9 @@ sleep 1
 
 # Extract domain and Cloudflare token from .env safely
 if [ -f .env ]; then
-    while IFS='=' read -r key value; do
-        if [[ ! "$key" =~ ^# ]] && [[ -n "$key" ]]; then
-            # Remove optional surrounding quotes
-            value="${value%\"}"
-            value="${value#\"}"
-            export "$key=$value"
-        fi
-    done < .env
+    set -a
+    source .env
+    set +a
 fi
 
 if [ -n "$CADDY_CLOUDFLARE_API_TOKEN" ]; then
@@ -28,8 +23,7 @@ fi
 # Start native Caddy reverse proxy
 if [ -f "./caddy" ] && [ -n "$DOMAIN" ] && [ -n "$CLOUDFLARE_API_TOKEN" ]; then
     echo "Starting native Caddy reverse proxy for $DOMAIN on port 8443..."
-    nohup ./caddy run --config Caddyfile > caddy.log 2>&1 &
-    echo $! > .caddy.pid
+    ./caddy start --config Caddyfile > caddy.log 2>&1
     export PUBLIC_URL="https://$DOMAIN:8443"
 else
     echo "Warning: Caddy requirements not met. Falling back to local HTTP IP."

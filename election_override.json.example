@@ -1,0 +1,31 @@
+{
+  "_comment": "Optional manual override file. Rename to election_override.json to apply overrides instantly.",
+  "senate": {
+    "dem": 49,
+    "gop": 49,
+    "net_flip": "+1 D"
+  },
+  "house": {
+    "dem": 210,
+    "gop": 204,
+    "net_flip": "+7 D"
+  },
+  "races": {
+    "sen_ga": {
+      "status": "Too Close to Call",
+      "status_badge_color": "#f59e0b",
+      "rep_pct": 68,
+      "dem_pct": 50.8,
+      "gop_pct": 49.2,
+      "dem_votes": 1425890,
+      "gop_votes": 1381200
+    },
+    "sen_nc": {
+      "status": "Projected Dem Hold",
+      "status_badge_color": "#2563eb",
+      "rep_pct": 89,
+      "dem_pct": 51.4,
+      "gop_pct": 48.6
+    }
+  }
+}

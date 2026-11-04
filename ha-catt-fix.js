@@ -1,4 +1,4 @@
-const cast_api = "//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js";
+const cast_api = "https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js";
 function loadScript(url, callback) {
   var head = document.getElementsByTagName("head")[0];
   var script = document.createElement("script");

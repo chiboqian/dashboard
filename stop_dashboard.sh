@@ -7,6 +7,13 @@ export PATH="$HOME/.local/bin:$PWD/venv/bin:$PATH"
 
 echo "Stopping dashboard..."
 
+# If in election mode and not forced, do not stop (e.g. from scheduled 22:00 Dagu cron)
+if [ -f .election_mode ] && [ "$1" != "--force" ] && [ "$(basename "$0")" != "stop_election.sh" ]; then
+    echo "Election night mode active (.election_mode exists). Skipping scheduled auto-stop."
+    exit 0
+fi
+rm -f .election_mode
+
 # 1. Stop cast_media.py gracefully first (so it can clean up its cast session)
 if [ -f .cast_media.pid ]; then
     PID=$(cat .cast_media.pid 2>/dev/null)
@@ -74,6 +81,15 @@ if [ -f .news_fetcher.pid ]; then
     rm -f .news_fetcher.pid
 fi
 
+if [ -f .election_fetcher.pid ]; then
+    PID=$(cat .election_fetcher.pid 2>/dev/null)
+    if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
+        pkill -P "$PID" 2>/dev/null
+        kill -9 "$PID" 2>/dev/null
+    fi
+    rm -f .election_fetcher.pid
+fi
+
 # Collect all ancestor PIDs so callers (and any shell wrappers) are never killed
 ancestor_pids=()
 curr=$$
@@ -82,7 +98,7 @@ while [ -n "$curr" ] && [ "$curr" -gt 1 ] 2>/dev/null; do
     curr=$(ps -o ppid= -p "$curr" 2>/dev/null | tr -d ' ')
 done
 
-for pid in $(pgrep -f "start_dashboard.sh|start_news.sh"); do
+for pid in $(pgrep -f "start_dashboard.sh|start_news.sh|start_election.sh"); do
     is_ancestor=false
     for apid in "${ancestor_pids[@]}"; do
         if [ "$pid" -eq "$apid" ]; then
@@ -97,6 +113,7 @@ for pid in $(pgrep -f "start_dashboard.sh|start_news.sh"); do
 done
 pkill -9 -f "unified_usage.py" 2>/dev/null
 pkill -9 -f "fetch_news.py" 2>/dev/null
+pkill -9 -f "fetch_elections.py" 2>/dev/null
 
 # 4. Stop native Caddy reverse proxy
 if [ -f "./caddy" ]; then

@@ -444,8 +444,31 @@ def cast_local_file(filepath=None, device_name=None, port=8888, content_type=Non
     if hasattr(signal, "SIGHUP") and signal.getsignal(signal.SIGHUP) != signal.SIG_IGN:
         signal.signal(signal.SIGHUP, cleanup)
     
-    # With ha-catt-fix handling the keep-alive natively in the browser, we no longer need the 9.5-minute restart flashes!
-    print("DashCast started. ha-catt-fix will maintain the connection indefinitely.")
+    # Active Watchdog:
+    # Continuously monitors the Cast session. If the smart display drops out of DashCast
+    # (e.g., manual touch exit, device reboot, or crash), it automatically re-casts the dashboard.
+    # Note: Periodic cast restarts are disabled because ha-catt-fix natively maintains
+    # the keep-alive inside the browser, allowing smooth in-place data updates without interruption.
+    def cast_watchdog():
+        time.sleep(10)
+        while True:
+            time.sleep(15)
+            try:
+                curr_app = cast.app_id
+                
+                # If smart display dropped out of DashCast (e.g. reverted to Backdrop screensaver)
+                if curr_app != APP_DASHCAST:
+                    print(f"\n[Watchdog] Smart display exited DashCast (current app: {curr_app}). Re-launching dashboard...")
+                    cast.quit_app()
+                    time.sleep(1.5)
+                    d.load_url(media_url, force=force_mode)
+            except Exception as e:
+                pass
+
+    if content_type.startswith("text/"):
+        watchdog_thread = threading.Thread(target=cast_watchdog, daemon=True)
+        watchdog_thread.start()
+        print("DashCast watchdog monitor started (crash/exit auto-reconnect enabled).")
     
     while True:
         time.sleep(1)
