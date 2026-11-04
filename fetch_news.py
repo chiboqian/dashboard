@@ -18,8 +18,10 @@ import urllib.request
 import concurrent.futures
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_HTML = os.path.join(SCRIPT_DIR, "news_dashboard.html")
-OUTPUT_JSON = os.path.join(SCRIPT_DIR, "news_data.json")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_HTML = os.path.join(OUTPUT_DIR, "news_dashboard.html")
+OUTPUT_JSON = os.path.join(OUTPUT_DIR, "news_data.json")
 
 FEEDS = [
     # Markets & Financial

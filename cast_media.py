@@ -28,6 +28,26 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
         def log_message(self, format, *args):
             if not quiet:
                 super().log_message(format, *args)
+
+        def translate_path(self, path):
+            orig_path = super().translate_path(path)
+            if os.path.exists(orig_path):
+                return orig_path
+
+            import urllib.parse
+            clean = path.split('?', 1)[0].split('#', 1)[0]
+            clean = os.path.normpath(urllib.parse.unquote(clean)).lstrip('/')
+
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            cand_root = os.path.join(script_dir, clean)
+            if os.path.exists(cand_root) and not os.path.isdir(cand_root):
+                return cand_root
+
+            cand_out = os.path.join(script_dir, "output", clean)
+            if os.path.exists(cand_out) and not os.path.isdir(cand_out):
+                return cand_out
+
+            return orig_path
             
         def do_GET(self):
             from urllib.parse import urlparse, parse_qs
@@ -318,6 +338,10 @@ def cast_local_file(filepath=None, device_name=None, port=8888, content_type=Non
         if not filepath:
             print("Error: You must provide a file to cast, or use the layout flags to create a dashboard.")
             return
+        if not os.path.exists(filepath):
+            cand_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", filepath)
+            if os.path.exists(cand_out):
+                filepath = cand_out
         filepath = os.path.abspath(filepath)
         if not os.path.exists(filepath):
             print(f"Error: File '{filepath}' does not exist.")
@@ -327,18 +351,16 @@ def cast_local_file(filepath=None, device_name=None, port=8888, content_type=Non
     else:
         # Determine the directory to serve based on the files provided
         serve_dir = os.getcwd()
-        if top and not top.startswith('http'):
-            serve_dir = os.path.dirname(os.path.abspath(top)) or serve_dir
-        elif bottom and not bottom.startswith('http'):
-            serve_dir = os.path.dirname(os.path.abspath(bottom)) or serve_dir
-        elif left and not left.startswith('http'):
-            serve_dir = os.path.dirname(os.path.abspath(left)) or serve_dir
-        elif right and not right.startswith('http'):
-            serve_dir = os.path.dirname(os.path.abspath(right)) or serve_dir
-        elif bottom_left and not bottom_left.startswith('http'):
-            serve_dir = os.path.dirname(os.path.abspath(bottom_left)) or serve_dir
-        elif bottom_right and not bottom_right.startswith('http'):
-            serve_dir = os.path.dirname(os.path.abspath(bottom_right)) or serve_dir
+        for candidate in (top, bottom, left, right, bottom_left, bottom_right):
+            if candidate and not candidate.startswith('http'):
+                cand_path = candidate
+                if not os.path.exists(cand_path):
+                    cand_out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "output", cand_path)
+                    if os.path.exists(cand_out):
+                        cand_path = cand_out
+                if os.path.exists(cand_path):
+                    serve_dir = os.path.dirname(os.path.abspath(cand_path))
+                    break
         target_filename = "dashboard"
 
     import mimetypes

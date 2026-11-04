@@ -2,6 +2,9 @@
 # Navigate to the reporting directory
 cd "$(dirname "$(readlink -f "$0")")"
 
+# Ensure output and logs directories exist
+mkdir -p output logs
+
 # Ensure user binaries (~/.local/bin for claude, agy) and project venv are in PATH
 export PATH="$HOME/.local/bin:$PWD/venv/bin:$PATH"
 
@@ -23,7 +26,7 @@ fi
 # Start native Caddy reverse proxy
 if [ -f "./caddy" ] && [ -n "$DOMAIN" ] && [ -n "$CLOUDFLARE_API_TOKEN" ]; then
     echo "Starting native Caddy reverse proxy for $DOMAIN on port 8443..."
-    ./caddy start --config Caddyfile > caddy.log 2>&1
+    ./caddy start --config Caddyfile > logs/caddy.log 2>&1
     export PUBLIC_URL="https://$DOMAIN:8443"
 else
     echo "Warning: Caddy requirements not met. Falling back to local HTTP IP."
@@ -41,7 +44,7 @@ fi
 
 # 2. Start background news updater daemon (every 2 minutes / 120s)
 echo "Starting background news fetcher daemon..."
-nohup "$PYTHON_BIN" -u ./fetch_news.py --daemon --interval 120 > news.log 2>&1 &
+setsid "$PYTHON_BIN" -u ./fetch_news.py --daemon --interval 120 > logs/news.log 2>&1 < /dev/null &
 echo $! > .news_fetcher.pid
 
 # 3. Start cast_media streaming news_dashboard.html
@@ -49,12 +52,12 @@ echo "----------------------------------------"
 echo "Starting news display cast at $(date)"
 echo "----------------------------------------"
 if [ -n "$PUBLIC_URL" ]; then
-    nohup "$PYTHON_BIN" -u ./cast_media.py -d "Lenovo Smart Display" \
-        "news_dashboard.html" \
-        --public-url "$PUBLIC_URL" > cast_media.log 2>&1 &
+    setsid "$PYTHON_BIN" -u ./cast_media.py -d "Lenovo Smart Display" \
+        "output/news_dashboard.html" \
+        --public-url "$PUBLIC_URL" > logs/cast_media.log 2>&1 < /dev/null &
 else
-    nohup "$PYTHON_BIN" -u ./cast_media.py -d "Lenovo Smart Display" \
-        "news_dashboard.html" > cast_media.log 2>&1 &
+    setsid "$PYTHON_BIN" -u ./cast_media.py -d "Lenovo Smart Display" \
+        "output/news_dashboard.html" > logs/cast_media.log 2>&1 < /dev/null &
 fi
 echo $! > .cast_media.pid
 disown -a 2>/dev/null || true

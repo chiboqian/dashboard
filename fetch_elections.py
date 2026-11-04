@@ -20,9 +20,13 @@ import concurrent.futures
 from bs4 import BeautifulSoup
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_HTML = os.path.join(SCRIPT_DIR, "election_dashboard.html")
-OUTPUT_JSON = os.path.join(SCRIPT_DIR, "election_data.json")
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, "output")
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_HTML = os.path.join(OUTPUT_DIR, "election_dashboard.html")
+OUTPUT_JSON = os.path.join(OUTPUT_DIR, "election_data.json")
 OVERRIDE_FILE = os.path.join(SCRIPT_DIR, "election_override.json")
+if not os.path.exists(OVERRIDE_FILE) and os.path.exists(os.path.join(OUTPUT_DIR, "election_override.json")):
+    OVERRIDE_FILE = os.path.join(OUTPUT_DIR, "election_override.json")
 
 # ---------------------------------------------------------
 # 1. Battleground State Definitions & Poll Closing Schedule

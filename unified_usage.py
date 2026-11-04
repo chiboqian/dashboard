@@ -281,7 +281,7 @@ print(sum(obj['Size'] for obj in res.get('Contents', [])))
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Generate a unified usage report.")
-    parser.add_argument("-o", "--output", default="usage_report.txt", help="Output file path (default: usage_report.txt)")
+    parser.add_argument("-o", "--output", default="output/usage_report.html", help="Output file path (default: output/usage_report.html)")
     parser.add_argument("-q", "--quiet", action="store_true", help="Do not print to console")
     parser.add_argument("--no-file", action="store_true", help="Do not save the report to a file")
     args = parser.parse_args()
@@ -353,7 +353,11 @@ def main():
         # Auto-switch the extension to .html if the user didn't explicitly provide a different one
         output_file = args.output
         if output_file == "usage_report.txt":
-            output_file = "usage_report.html"
+            output_file = "output/usage_report.html"
+            
+        out_dir = os.path.dirname(output_file)
+        if out_dir:
+            os.makedirs(out_dir, exist_ok=True)
             
         try:
             with open(output_file, "w") as f:

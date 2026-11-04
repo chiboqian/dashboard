@@ -54,7 +54,7 @@ flowchart LR
 * **Schedule**: Automated weekdays at 07:00 ET via Dagu.
 * **Layout**:
   * **Left Pane (55% ratio)**: Live Multi-Account Trading Monitor (`https://dashboard.luna-strategy.com/account_status.html`) tracking live equity, cash, buying power, and open positions.
-  * **Right Pane (45% ratio)**: AI Quotas & Unified Usage Report (`usage_report.html`) generated every 60s by `unified_usage.py`, tracking Claude and Gemini rate limits and resets.
+  * **Right Pane (45% ratio)**: AI Quotas & Unified Usage Report (`output/usage_report.html`) generated every 60s by `unified_usage.py`, tracking Claude and Gemini rate limits and resets.
   * **Optional Video Pane**: Bloomberg TV live stream in the bottom-right corner when launched with `--video` / `-v`.
 
 ### 2. Breaking News Dashboard
@@ -123,8 +123,8 @@ flowchart LR
 | **Stop Election Mode** | `./stop_election.sh` | Clears `.election_mode` and quits cast |
 | **Interactive Video Streamer** | `./pick_video.sh` | Select from curated live news M3U8 streams |
 | **Cast Direct Video Stream** | `./play_video.sh [URL]` | Defaults to Bloomberg TV |
-| **Regenerate Usage Report** | `./unified_usage.py` | Updates `usage_report.html` |
-| **One-Time Election Aggregation** | `./venv/bin/python3 fetch_elections.py` | Writes `election_data.json` |
+| **Regenerate Usage Report** | `./unified_usage.py` | Updates `output/usage_report.html` |
+| **One-Time Election Aggregation** | `./venv/bin/python3 fetch_elections.py` | Writes `output/election_data.json` |
 
 ---
 
@@ -147,13 +147,21 @@ reporting/
 ├── fetch_news.py               # Multi-source RSS & Yahoo Finance news aggregator
 ├── fetch_elections.py          # Real-time Decision Desk aggregator & BOP calculator
 │
-├── election_dashboard.html     # Broadcast-grade election big board template
-├── election_data.json          # Live election state payload (polled every 10s by DOM)
-├── election_override.json.example # Template for simulating or overriding race calls
-├── news_dashboard.html         # Financial news dashboard template
-├── usage_report.html           # Generated AI quota summary table
-├── account_status.html         # Multi-account trading monitor template
+├── logs/                       # Log directory for daemons and reverse proxy
+│   ├── caddy.log               # Caddy reverse proxy log
+│   ├── cast_media.log          # Chromecast streaming and watchdog log
+│   ├── election.log            # Background election fetcher log
+│   └── news.log                # Background news fetcher log
 │
+├── output/                     # Generated reports, dashboards, and live data
+│   ├── election_dashboard.html # Broadcast-grade election big board template
+│   ├── election_data.json      # Live election state payload (polled every 10s by DOM)
+│   ├── news_dashboard.html     # Financial news dashboard template
+│   ├── news_data.json          # Live financial & world news headlines payload
+│   └── usage_report.html       # Generated AI quota summary table
+├── outputs                     # Symlink pointing to output/
+│
+├── election_override.json.example # Template for simulating or overriding race calls
 ├── pick_video.sh               # Interactive live news stream selector
 ├── play_video.sh               # Direct full-screen video cast script
 ├── Caddyfile                   # Optional HTTPS reverse proxy config

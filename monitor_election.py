@@ -137,7 +137,8 @@ def main():
     if args.cast:
         python_bin = sys.executable
         cast_script = os.path.join(SCRIPT_DIR, "cast_media.py")
-        cmd = [python_bin, "-u", cast_script, "-d", args.device, "-p", str(args.port), "election_dashboard.html"]
+        target_dashboard = os.path.join(SCRIPT_DIR, "output", "election_dashboard.html")
+        cmd = [python_bin, "-u", cast_script, "-d", args.device, "-p", str(args.port), target_dashboard]
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Spawning cast process: {' '.join(cmd)}", flush=True)
         try:
             cast_proc = subprocess.Popen(cmd, cwd=SCRIPT_DIR)

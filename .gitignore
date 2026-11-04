@@ -1,4 +1,12 @@
-# Generated files
+# Generated Output & Log directories
+output
+output/
+outputs
+outputs/
+logs
+logs/
+
+# Legacy root outputs & logs (backward compatibility)
 usage_report.html
 usage_report.txt
 dashboard.html
@@ -7,16 +15,14 @@ news_data.json
 account_status.html
 election_dashboard.html
 election_data.json
-.election_mode
 election_override.json
 cast.log
 *.log
+
+# Mode & PID flags
+.election_mode
 *.pid
 .*.pid
-
-# Local binaries & scripts
-cloudflared*
-test_env.sh
 
 # Secrets
 .env
@@ -24,6 +30,7 @@ test_env.sh
 # Python
 __pycache__/
 *.pyc
+*.pyo
 
 # Virtualenv
 venv/

@@ -2,6 +2,9 @@
 # Navigate to the reporting directory
 cd "$(dirname "$(readlink -f "$0")")"
 
+# Ensure output and logs directories exist
+mkdir -p output logs
+
 # Ensure user binaries (~/.local/bin for claude, agy) and project venv are in PATH
 # (cron runs with a minimal environment like /usr/bin:/bin)
 export PATH="$HOME/.local/bin:$PWD/venv/bin:$PATH"
@@ -48,9 +51,9 @@ echo "Starting dashboard cast at $(date)"
 echo "----------------------------------------"
 setsid ./venv/bin/python3 -u ./cast_media.py -d "Lenovo Smart Display" \
     --left "https://dashboard.luna-strategy.com/account_status.html" \
-    --right "usage_report.html" \
+    --right "output/usage_report.html" \
     $VIDEO_ARG \
-    --ratio 55:45 > cast_media.log 2>&1 < /dev/null &
+    --ratio 55:45 > logs/cast_media.log 2>&1 < /dev/null &
 echo $! > .cast_media.pid
 
 # 3. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
