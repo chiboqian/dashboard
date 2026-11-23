@@ -287,9 +287,30 @@ def deduplicate_and_sort(items):
         
     return deduped
 
-def build_dashboard_html(markets, world, generated_time_str, indexes=None):
+def build_dashboard_html(markets, world, generated_time_str, indexes=None, rotate=90):
     if indexes is None:
         indexes = []
+
+    rot = int(rotate) % 360
+    is_portrait = rot in (90, 270)
+    root_cls = "news-root portrait" if is_portrait else "news-root"
+    if rot == 90:
+        root_css = (
+            "position: fixed; top: 0; left: 0; width: 100vh; height: 100vw; "
+            "transform-origin: top left; transform: translateX(100vw) rotate(90deg);"
+        )
+    elif rot == 270:
+        root_css = (
+            "position: fixed; top: 0; left: 0; width: 100vh; height: 100vw; "
+            "transform-origin: top left; transform: translateY(100vh) rotate(-90deg);"
+        )
+    elif rot == 180:
+        root_css = (
+            "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; "
+            "transform-origin: center center; transform: rotate(180deg);"
+        )
+    else:
+        root_css = "width: 100vw; height: 100vh;"
 
     def render_items(items):
         html_cards = []
@@ -331,7 +352,7 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
     markets_cards = render_items(markets)
     world_cards = render_items(world)
     indexes_cards = render_indexes(indexes)
-    ticker_duration = max(45, len(indexes) * 5)
+    ticker_duration = max(35, round(len(indexes) * 3.8))
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -358,14 +379,21 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             -webkit-font-smoothing: antialiased;
         }}
 
-        body {{
+        html, body {{
             background-color: var(--bg-color);
             color: var(--text-primary);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            width: 100vw;
             height: 100vh;
             overflow: hidden;
+        }}
+
+        .news-root {{
+            {root_css}
+            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }}
 
         /* Top Header */
@@ -575,7 +603,6 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             flex: 1;
             display: flex;
             min-height: 0;
-            height: calc(100vh - 109px);
             position: relative;
         }}
 
@@ -583,6 +610,7 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             flex: 1;
             display: flex;
             flex-direction: column;
+            min-height: 0;
             border-right: 2px solid var(--border-color);
             overflow: hidden;
             position: relative;
@@ -690,6 +718,77 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             line-height: 1.45;
             color: #94a3b8;
         }}
+
+        /* Portrait Mode Layout (800x1280 stacked Markets & World feeds) */
+        .news-root.portrait header {{
+            padding: 10px 16px;
+        }}
+
+        .news-root.portrait .brand {{
+            gap: 10px;
+        }}
+
+        .news-root.portrait .brand-title {{
+            font-size: 1.05rem;
+            letter-spacing: 1px;
+        }}
+
+        .news-root.portrait .brand-sub {{
+            display: none;
+        }}
+
+        .news-root.portrait .clock-container {{
+            gap: 10px;
+        }}
+
+        .news-root.portrait .clock {{
+            font-size: 1.15rem;
+        }}
+
+        .news-root.portrait .date-badge {{
+            font-size: 0.82rem;
+        }}
+
+        .news-root.portrait .indices-bar {{
+            height: 40px;
+        }}
+
+        .news-root.portrait main {{
+            flex-direction: column;
+        }}
+
+        .news-root.portrait .column {{
+            border-right: none;
+            border-bottom: 2px solid var(--border-color);
+        }}
+
+        .news-root.portrait .column:last-child {{
+            border-bottom: none;
+        }}
+
+        .news-root.portrait .column-header {{
+            padding: 8px 16px;
+        }}
+
+        .news-root.portrait .scroll-viewport {{
+            padding: 12px 16px;
+        }}
+
+        .news-root.portrait .cards-track {{
+            gap: 12px;
+        }}
+
+        .news-root.portrait .news-card {{
+            padding: 13px 16px;
+        }}
+
+        .news-root.portrait .card-title {{
+            font-size: 1.15rem;
+        }}
+
+        .news-root.portrait .card-desc {{
+            font-size: 0.9rem;
+        }}
     </style>
     <!-- Ha-catt fix to maintain DashCast keep-alive natively -->
     <script src="/ha-catt-fix.js"></script>
@@ -700,6 +799,7 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
         <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4">
     </video>
 
+    <div class="{root_cls}">
     <header>
         <div class="brand">
             <div class="live-dot"></div>
@@ -756,6 +856,7 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             </div>
         </section>
     </main>
+    </div>
 
     <script>
         // 1. Live Digital Clock (EDT)
@@ -789,6 +890,8 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             // Clone track nodes for infinite seamless wrap-around loop
             const clone = track.cloneNode(true);
             clone.id = trackId + "-clone";
+            const gapPx = parseFloat(getComputedStyle(track).rowGap || getComputedStyle(track).gap) || 16;
+            clone.style.marginTop = gapPx + "px";
             track.parentNode.appendChild(clone);
 
             let pos = 0;
@@ -802,7 +905,7 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
             function step() {{
                 if (!isPaused) {{
                     pos += speed;
-                    const trackHeight = track.offsetHeight + 16;
+                    const trackHeight = track.offsetHeight + gapPx;
                     if (pos >= trackHeight) {{
                         pos = 0;
                     }}
@@ -815,8 +918,8 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
 
         // Slightly different speeds so columns feel independent and dynamic
         window.addEventListener('load', () => {{
-            setupScroller('viewport-markets', 'track-markets', 0.45);
-            setupScroller('viewport-world', 'track-world', 0.40);
+            setupScroller('viewport-markets', 'track-markets', 0.65);
+            setupScroller('viewport-world', 'track-world', 0.58);
         }});
 
         // 3. Auto-Refresh: Check for fresh headlines and indexes every 60s
@@ -839,7 +942,7 @@ def build_dashboard_html(markets, world, generated_time_str, indexes=None):
 </html>
 """
 
-def fetch_and_generate():
+def fetch_and_generate(rotate=90):
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Fetching RSS feeds & market indexes...")
     all_raw = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
@@ -874,25 +977,26 @@ def fetch_and_generate():
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
-    html_content = build_dashboard_html(markets, world, gen_time_str, indexes)
+    html_content = build_dashboard_html(markets, world, gen_time_str, indexes, rotate=rotate)
     with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
         f.write(html_content)
 
-    print(f"Successfully generated {OUTPUT_HTML} ({len(indexes)} indexes, {len(markets)} market, {len(world)} world items).")
+    print(f"Successfully generated {OUTPUT_HTML} ({len(indexes)} indexes, {len(markets)} market, {len(world)} world items, rotate={rotate}deg).")
 
 def main():
     parser = argparse.ArgumentParser(description="Fetch market and world news RSS feeds.")
     parser.add_argument("--daemon", action="store_true", help="Run continuously in background.")
     parser.add_argument("--interval", type=int, default=300, help="Refresh interval in seconds (default: 300).")
+    parser.add_argument("--rotate", type=int, default=90, help="Rotate news dashboard output in degrees (0, 90, 180, 270, or -90). Default: 90 (portrait).")
     args = parser.parse_args()
 
     if not args.daemon:
-        fetch_and_generate()
+        fetch_and_generate(rotate=args.rotate)
     else:
-        print(f"Starting news generator daemon (refreshing every {args.interval}s)...")
+        print(f"Starting news generator daemon (refreshing every {args.interval}s, rotate={args.rotate}deg)...")
         while True:
             try:
-                fetch_and_generate()
+                fetch_and_generate(rotate=args.rotate)
             except Exception as e:
                 print(f"Error in fetch cycle: {e}")
             time.sleep(args.interval)

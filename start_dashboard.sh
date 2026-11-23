@@ -11,10 +11,26 @@ export PATH="$HOME/.local/bin:$PWD/venv/bin:$PATH"
 
 # Parse arguments
 INCLUDE_VIDEO=false
-for arg in "$@"; do
-    if [ "$arg" == "--video" ] || [ "$arg" == "-v" ]; then
-        INCLUDE_VIDEO=true
-    fi
+ROTATE=90
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --video|-v)
+            INCLUDE_VIDEO=true
+            ;;
+        --landscape)
+            ROTATE=0
+            ;;
+        --portrait)
+            ROTATE=90
+            ;;
+        --rotate)
+            shift
+            if [ -n "$1" ]; then
+                ROTATE="$1"
+            fi
+            ;;
+    esac
+    shift
 done
 
 # Terminate any previously running instances cleanly
@@ -32,15 +48,6 @@ if [ -n "$CADDY_CLOUDFLARE_API_TOKEN" ]; then
     export CLOUDFLARE_API_TOKEN=$CADDY_CLOUDFLARE_API_TOKEN
 fi
 
-# Setup video argument
-VIDEO_ARG=""
-if [ "$INCLUDE_VIDEO" = true ]; then
-    VIDEO_ARG="--bottom-right /bloomberg_tv"
-    echo "Video mode ENABLED."
-else
-    echo "Video mode DISABLED. (Pass --video to enable)"
-fi
-
 # 1. Pre-generate a fresh usage report before casting so display has up-to-date data
 echo "Pre-generating fresh usage report..."
 ./unified_usage.py --quiet
@@ -49,19 +56,30 @@ echo "Pre-generating fresh usage report..."
 echo "----------------------------------------"
 echo "Starting dashboard cast at $(date)"
 echo "----------------------------------------"
-setsid ./venv/bin/python3 -u ./cast_media.py -d "Lenovo Smart Display" \
-    --left "https://dashboard.luna-strategy.com/account_status.html" \
-    --right "output/usage_report.html" \
-    $VIDEO_ARG \
-    --ratio 55:45 > logs/cast_media.log 2>&1 < /dev/null &
+if [ "$INCLUDE_VIDEO" = true ]; then
+    echo "Video mode ENABLED (rotate=${ROTATE}deg)."
+    setsid ./venv/bin/python3 -u ./cast_media.py -d "Lenovo Smart Display" \
+        --left "https://dashboard.luna-strategy.com/account_status.html" \
+        --right "output/usage_report.html" \
+        --bottom-right /bloomberg_tv \
+        --ratio 60:40 \
+        --rotate "$ROTATE" > logs/cast_media.log 2>&1 < /dev/null &
+else
+    echo "Video mode DISABLED (portrait rotate=${ROTATE}deg; pass --landscape or --rotate 270 to adjust)."
+    setsid ./venv/bin/python3 -u ./cast_media.py -d "Lenovo Smart Display" \
+        --top "https://dashboard.luna-strategy.com/account_status.html" \
+        --bottom "output/usage_report.html" \
+        --ratio 91:9 \
+        --rotate "$ROTATE" > logs/cast_media.log 2>&1 < /dev/null &
+fi
 echo $! > .cast_media.pid
 
-# 3. Start an infinite loop to seamlessly regenerate the usage report every 60 seconds
+# 3. Start an infinite loop to seamlessly regenerate Cloudflare usage every 2 minutes
 echo "Starting background usage report generator..."
 setsid bash -c '
 while true; do
     ./unified_usage.py --quiet
-    sleep 60
+    sleep 120
 done
 ' > /dev/null 2>&1 < /dev/null &
 echo $! > .usage_loop.pid

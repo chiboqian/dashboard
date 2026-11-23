@@ -49,19 +49,20 @@ flowchart LR
 ## Dashboards
 
 ### 1. Daily Operations Dashboard
-* **Launch**: `./start_dashboard.sh` (or with video: `./start_dashboard.sh --video`)
+* **Launch**: `./start_dashboard.sh` (portrait 90° default; pass `--landscape` for landscape, `--rotate 270` to flip portrait direction, or `--video` for Bloomberg TV)
 * **Stop**: `./stop_dashboard.sh`
 * **Schedule**: Automated weekdays at 07:00 ET via Dagu.
-* **Layout**:
-  * **Left Pane (55% ratio)**: Live Multi-Account Trading Monitor (`https://dashboard.luna-strategy.com/account_status.html`) tracking live equity, cash, buying power, and open positions.
-  * **Right Pane (45% ratio)**: AI Quotas & Unified Usage Report (`output/usage_report.html`) generated every 60s by `unified_usage.py`, tracking Claude and Gemini rate limits and resets.
-  * **Optional Video Pane**: Bloomberg TV live stream in the bottom-right corner when launched with `--video` / `-v`.
+* **Layout (Portrait 800×1280 via CSS 90° rotation)**:
+  * **Top Pane (91% height, 800×1163)**: Live Multi-Account Trading Monitor (`https://dashboard.luna-strategy.com/account_status.html`) tracking live equity, cash, buying power, and open positions.
+  * **Bottom Strip (9% height, 800×115)**: Ultra-compact **3×2 Cloudflare Usage Grid** (`output/usage_report.html` + `output/usage_data.json`, auto-switches to 6×1 in `--landscape` mode) updated every 2 minutes by `unified_usage.py` with in-place DOM polling, tracking Cloudflare D1 and R2 operations, storage, and quota resets.
+  * **Optional Video Mode (`--video` / `-v`)**: Uses a 60:40 left/right split with Account Monitor on the left, Cloudflare Usage (2×3 grid) top-right, and Bloomberg TV live stream bottom-right.
 
 ### 2. Breaking News Dashboard
-* **Launch**: `./start_news.sh`
+* **Launch**: `./start_news.sh` (portrait 90° default; pass `--landscape` for landscape or `--rotate 270` to flip portrait direction)
 * **Stop**: `./stop_news.sh`
 * **Schedule**: Weekdays at 17:00 ET and weekends at 07:00 ET.
 * **Features**:
+  * **Portrait Layout (800×1280 via CSS 90° rotation)**: Full-width scrolling financial indices ticker at top, with **Markets & Finance** stacked above **World & Geopolitics** (auto-switches to side-by-side columns in `--landscape` mode).
   * Real-time financial indices strip (S&P 500, Dow, Nasdaq, 10Y Yield, DXY, Bitcoin, WTI Crude).
   * High-priority wire stories and geopolitical dispatches from AP, Reuters, Bloomberg, and CNBC.
   * Seamless auto-scrolling news track with breaking news banner.
@@ -114,9 +115,10 @@ flowchart LR
 
 | Action | Command | Notes |
 | :--- | :--- | :--- |
-| **Start Daily Dashboard** | `./start_dashboard.sh` | Account Monitor (55%) + AI Usage (45%) |
+| **Start Daily Dashboard** | `./start_dashboard.sh` | Portrait (90°): Account Monitor (91%) + Cloudflare 3×2 Strip (9%) |
+| **Start Daily Dashboard (Landscape)** | `./start_dashboard.sh --landscape` | Landscape (0°): Account Monitor (91%) + Cloudflare 6×1 Strip (9%) |
 | **Start Daily Dashboard (w/ Video)** | `./start_dashboard.sh --video` | Includes Bloomberg TV bottom-right |
-| **Start News Dashboard** | `./start_news.sh` | Financial & global news ticker |
+| **Start News Dashboard** | `./start_news.sh` | Portrait (90°): Markets & World news stacked (`--landscape` for 0°) |
 | **Start Election Dashboard** | `./start_election.sh` | Real-time Decision Desk & BOP board |
 | **Monitor Election (PM2)** | `pm2 start monitor_election.sh --name "election-monitor"` | Foreground daemon for PM2 management |
 | **Stop All / Reset Display** | `./stop_dashboard.sh --force` | Returns display to ambient Backdrop |
@@ -143,7 +145,7 @@ reporting/
 │
 ├── cast_media.py               # Chromecast streaming server, split-screen engine, & watchdog
 ├── ha-catt-fix.js              # CAF receiver keep-alive script for DashCast
-├── unified_usage.py            # AI usage scraper (Claude Code, Gemini CLI, Cloudflare)
+├── unified_usage.py            # Cloudflare D1 & R2 usage collector
 ├── fetch_news.py               # Multi-source RSS & Yahoo Finance news aggregator
 ├── fetch_elections.py          # Real-time Decision Desk aggregator & BOP calculator
 │
@@ -158,7 +160,7 @@ reporting/
 │   ├── election_data.json      # Live election state payload (polled every 10s by DOM)
 │   ├── news_dashboard.html     # Financial news dashboard template
 │   ├── news_data.json          # Live financial & world news headlines payload
-│   └── usage_report.html       # Generated AI quota summary table
+│   └── usage_report.html       # Generated Cloudflare usage summary table
 ├── outputs                     # Symlink pointing to output/
 │
 ├── election_override.json.example # Template for simulating or overriding race calls

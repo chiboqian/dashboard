@@ -19,7 +19,7 @@ def get_local_ip():
         s.close()
     return IP
 
-def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True):
+def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True, rotate=0):
     """Start a temporary HTTP server to host local files or a dynamic dashboard."""
     class Handler(http.server.SimpleHTTPRequestHandler):
         def __init__(self, *args, **kwargs):
@@ -80,12 +80,32 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
 
                 width_pct1 = 100 / scale1
                 width_pct2 = 100 / scale2
-                
+
+                rot = int(rotate) % 360
+                if rot == 90:
+                    root_css = (
+                        "position: fixed; top: 0; left: 0; width: 100vh; height: 100vw; "
+                        "transform-origin: top left; transform: translateX(100vw) rotate(90deg);"
+                    )
+                elif rot == 270:
+                    root_css = (
+                        "position: fixed; top: 0; left: 0; width: 100vh; height: 100vw; "
+                        "transform-origin: top left; transform: translateY(100vh) rotate(-90deg);"
+                    )
+                elif rot == 180:
+                    root_css = (
+                        "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; "
+                        "transform-origin: center center; transform: rotate(180deg);"
+                    )
+                else:
+                    root_css = "width: 100vw; height: 100vh;"
+
                 html_content = f"""<!DOCTYPE html>
                 <html><head>
                 <meta charset="utf-8">
                 <style>
-                    body {{ margin: 0; padding: 0; background: #000; display: flex; flex-direction: {flex_dir}; height: 100vh; overflow: hidden; }}
+                    html, body {{ margin: 0; padding: 0; width: 100vw; height: 100vh; background: #000; overflow: hidden; }}
+                    .dashboard-root {{ {root_css} display: flex; flex-direction: {flex_dir}; overflow: hidden; background: #000; }}
                     
                     /* Left/Top Container */
                     .half-container-1 {{ flex: {r1}; display: flex; flex-direction: column; position: relative; overflow: hidden; }}
@@ -112,7 +132,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         transform: scale({scale2}); transform-origin: 0 0;
                     }}
                     
-                    .divider {{ background: #333; {divider_css} z-index: 10; }}
+                    .divider {{ background: #333; flex-shrink: 0; {divider_css} z-index: 10; }}
                 </style>
                 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
                 <script src="/ha-catt-fix.js"></script>
@@ -122,7 +142,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         document.querySelectorAll('iframe').forEach(f => {{
                             try {{
                                 let urlStr = f.src.toLowerCase();
-                                if (urlStr.includes('youtube') || urlStr.includes('.mp4') || urlStr.includes('news.html')) {{
+                                if (urlStr.includes('youtube') || urlStr.includes('.mp4') || urlStr.includes('news.html') || urlStr.includes('usage_report.html')) {{
                                     return;
                                 }}
                                 let url = new URL(f.src);
@@ -175,6 +195,8 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         '''
                     return f'<iframe class="{scale_class}" src="{src}"></iframe>'
                 
+                html_content += '<div class="dashboard-root">\n'
+
                 # Build Left Side
                 if first_src or first_bot_src:
                     html_content += f'<div class="half-container-1">\n'
@@ -196,7 +218,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
                         html_content += f'  <div class="pane-bottom-right">{render_pane(second_bot_src, "scaled-iframe-2")}</div>\n'
                     html_content += f'</div>\n'
                 
-                html_content += "</body></html>"
+                html_content += "</div></body></html>"
                 
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html; charset=utf-8')
@@ -324,7 +346,7 @@ def start_local_server(directory, port, font_size="1.5vw", top=None, bottom=None
     
     return httpd
 
-def cast_local_file(filepath=None, device_name=None, port=8888, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True, public_url=None):
+def cast_local_file(filepath=None, device_name=None, port=8888, content_type=None, font_size="1.5vw", top=None, bottom=None, left=None, right=None, bottom_left=None, bottom_right=None, scale1=1.0, scale2=1.0, ratio="50:50", quiet=True, public_url=None, rotate=0):
     try:
         import pychromecast
     except ImportError:
@@ -389,7 +411,7 @@ def cast_local_file(filepath=None, device_name=None, port=8888, content_type=Non
     print(f"Connected to device: {cast.cast_info.friendly_name}")
     
     local_ip = get_local_ip()
-    httpd = start_local_server(serve_dir, port, font_size, top, bottom, left, right, bottom_left, bottom_right, scale1, scale2, ratio, quiet)
+    httpd = start_local_server(serve_dir, port, font_size, top, bottom, left, right, bottom_left, bottom_right, scale1, scale2, ratio, quiet, rotate)
     
     # URL escape the filename for the cast device
     from urllib.parse import quote
@@ -516,6 +538,7 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", dest="quiet", action="store_true", default=True, help="Suppress HTTP access logs (Default: True)")
     parser.add_argument("--verbose", dest="quiet", action="store_false", help="Show HTTP access logs")
     parser.add_argument("--public-url", default=None, help="Public HTTPS URL (e.g. https://tv.luna-strategy.com) when running behind a reverse proxy like Caddy")
+    parser.add_argument("--rotate", type=int, default=0, help="Rotate dashboard output in degrees (0, 90, 180, 270, or -90) for portrait displays.")
     
     args = parser.parse_args()
-    cast_local_file(args.file, args.device, args.port, args.content_type, args.font_size, args.top, args.bottom, args.left, args.right, args.bottom_left, args.bottom_right, args.scale1, args.scale2, args.ratio, args.quiet, args.public_url)
+    cast_local_file(args.file, args.device, args.port, args.content_type, args.font_size, args.top, args.bottom, args.left, args.right, args.bottom_left, args.bottom_right, args.scale1, args.scale2, args.ratio, args.quiet, args.public_url, args.rotate)

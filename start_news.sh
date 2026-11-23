@@ -8,6 +8,26 @@ mkdir -p output logs
 # Ensure user binaries (~/.local/bin for claude, agy) and project venv are in PATH
 export PATH="$HOME/.local/bin:$PWD/venv/bin:$PATH"
 
+# Parse arguments (default: portrait 90deg to match Lenovo Smart Display upright)
+ROTATE=90
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --landscape)
+            ROTATE=0
+            ;;
+        --portrait)
+            ROTATE=90
+            ;;
+        --rotate)
+            shift
+            if [ -n "$1" ]; then
+                ROTATE="$1"
+            fi
+            ;;
+    esac
+    shift
+done
+
 # Terminate any previously running instances cleanly
 ./stop_dashboard.sh > /dev/null 2>&1
 sleep 1
@@ -40,11 +60,11 @@ if [ ! -x "$PYTHON_BIN" ]; then
     PYTHON_BIN="python3"
 fi
 
-"$PYTHON_BIN" ./fetch_news.py
+"$PYTHON_BIN" ./fetch_news.py --rotate "$ROTATE"
 
 # 2. Start background news updater daemon (every 2 minutes / 120s)
-echo "Starting background news fetcher daemon..."
-setsid "$PYTHON_BIN" -u ./fetch_news.py --daemon --interval 120 > logs/news.log 2>&1 < /dev/null &
+echo "Starting background news fetcher daemon (rotate=${ROTATE}deg)..."
+setsid "$PYTHON_BIN" -u ./fetch_news.py --daemon --interval 120 --rotate "$ROTATE" > logs/news.log 2>&1 < /dev/null &
 echo $! > .news_fetcher.pid
 
 # 3. Start cast_media streaming news_dashboard.html
